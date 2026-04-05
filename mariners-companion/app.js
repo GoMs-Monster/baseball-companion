@@ -898,8 +898,15 @@ async function update() {
         renderAtBat(liveData, isHome);
       }
 
+      const contentEl = document.getElementById('content');
+      const scrollX = contentEl.scrollLeft;
+      const scrollY = contentEl.scrollTop;
+
       if (currentTab === 'box') renderBattingTable(my, liveData, isHome);
       else if (currentTab === 'scorecard') renderScorecard(liveData, isHome);
+
+      contentEl.scrollLeft = scrollX;
+      contentEl.scrollTop = scrollY;
 
       document.getElementById('atbat').innerHTML = '';
     }
