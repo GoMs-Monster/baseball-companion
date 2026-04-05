@@ -105,7 +105,10 @@ function renderDivisionStandings() {
     if (!div) { document.getElementById('divStandings').innerHTML = ''; return; }
     const teams = div.teamRecords.sort((a, b) => parseInt(a.divisionRank) - parseInt(b.divisionRank));
     document.getElementById('divStandings').innerHTML = teams.map(tr =>
-      `<img src="${LOGO_URL(tr.team.id)}" class="ds-flag${tr.team.id === TEAM_ID ? ' ds-selected' : ''}" alt="${TEAMS[tr.team.id]}" title="${tr.divisionRank}. ${TEAMS[tr.team.id]} (${tr.wins}-${tr.losses})">`
+      `<div class="ds-team">
+        <img src="${LOGO_URL(tr.team.id)}" class="ds-flag${tr.team.id === TEAM_ID ? ' ds-selected' : ''}" alt="${TEAMS[tr.team.id]}">
+        <span class="ds-record">${tr.wins}-${tr.losses}</span>
+      </div>`
     ).join('');
   }).catch(() => {});
 }
