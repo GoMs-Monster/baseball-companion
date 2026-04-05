@@ -821,24 +821,6 @@ document.getElementById('playsModal').onclick = e => { if (e.target.id === 'play
 document.getElementById('tsClose').onclick = () => document.getElementById('teamStatsModal').style.display = 'none';
 document.getElementById('teamStatsModal').onclick = e => { if (e.target.id === 'teamStatsModal') e.target.style.display = 'none'; };
 
-// Swipe to switch tabs
-const tabs = ['scorecard', 'box'];
-let touchStartX = 0;
-let touchStartY = 0;
-const content = document.getElementById('content');
-content.addEventListener('touchstart', e => {
-  touchStartX = e.changedTouches[0].screenX;
-  touchStartY = e.changedTouches[0].screenY;
-}, { passive: true });
-content.addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].screenX - touchStartX;
-  const dy = e.changedTouches[0].screenY - touchStartY;
-  if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
-  const idx = tabs.indexOf(currentTab);
-  if (dx < 0 && idx < tabs.length - 1) { currentTab = tabs[idx + 1]; update(); }
-  else if (dx > 0 && idx > 0) { currentTab = tabs[idx - 1]; update(); }
-}, { passive: true });
-
 function updateActiveTab() {
   document.querySelectorAll('nav button').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === currentTab);

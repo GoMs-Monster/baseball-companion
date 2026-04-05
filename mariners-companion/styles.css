@@ -156,3 +156,33 @@ th:hover { background:color-mix(in srgb, var(--primary), #fff 20%); }
 .sc-runs { border-top:2px solid var(--accent); }
 .sc-runs .sc-name { font-weight:700; color:var(--accent); }
 .sc-run-cell { color:var(--accent); font-weight:700; }
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  #scorebar { flex-wrap:wrap; padding:8px; gap:8px; font-size:16px; }
+  #teamBtn { font-size:14px; padding:3px 8px; }
+  #scoreText { flex:1; font-size:15px; min-width:0; }
+  #divStandings { order:5; width:100%; justify-content:center; margin-left:0; gap:8px; }
+  .ds-flag { width:20px; height:20px; }
+  #liveInfo { order:6; width:100%; justify-content:center; flex:unset; font-size:13px; gap:8px; }
+  .mc-player { font-size:13px; }
+  .mc-count { font-size:14px; }
+  #bannerActions { gap:3px; }
+  .banner-btn { font-size:12px; padding:6px 10px; }
+  nav { top:auto; }
+  nav button { padding:8px; font-size:13px; }
+  table { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  th, td { padding:6px 4px; font-size:12px; white-space:nowrap; }
+  #content { zoom:0.8; -moz-transform:scale(0.8); -moz-transform-origin:top left; width:125%; }
+  .sc-table th, .sc-table td { padding:3px 3px; font-size:11px; }
+  .sc-name { width:80px; min-width:80px; font-size:9px; }
+  .sc-cell { min-width:42px; width:42px; height:42px; font-size:11px; }
+  .sz-modal-content { width:95%; padding:14px; }
+  .zone-plate-wrapper { flex-direction:column; }
+  .batter-indicator { width:60px; }
+  .batter-silhouette { width:50px; height:160px; }
+  .ts-cards { flex-direction:column; }
+  .ts-card { min-width:unset; }
+  .preview { padding:16px; }
+  .matchup-header { font-size:18px; }
+}
