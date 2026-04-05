@@ -25,6 +25,7 @@ let currentTab = 'scorecard';
 let sortState = { key: 'order', asc: true };
 let pitchSortState = { key: 'ipSort', asc: false };
 let latestGameState = null;
+let standingsCache = null;
 
 const LOGO_URL = id => `https://www.mlbstatic.com/team-logos/${id}.svg`;
 const teamBtn = document.getElementById('teamBtn');
@@ -89,19 +90,44 @@ function calcWoba(s) {
   return woba.toFixed(3);
 }
 
+async function fetchStandings() {
+  if (standingsCache) return standingsCache;
+  const year = new Date().getFullYear();
+  const res = await fetch(`https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${year}&standingsTypes=regularSeason`);
+  const data = await res.json();
+  standingsCache = data.records;
+  return standingsCache;
+}
+
+function renderDivisionStandings() {
+  fetchStandings().then(records => {
+    const div = records.find(r => r.teamRecords.some(tr => tr.team.id === TEAM_ID));
+    if (!div) { document.getElementById('divStandings').innerHTML = ''; return; }
+    const teams = div.teamRecords.sort((a, b) => parseInt(a.divisionRank) - parseInt(b.divisionRank));
+    document.getElementById('divStandings').innerHTML = teams.map(tr =>
+      `<img src="${LOGO_URL(tr.team.id)}" class="ds-flag${tr.team.id === TEAM_ID ? ' ds-selected' : ''}" alt="${TEAMS[tr.team.id]}" title="${tr.divisionRank}. ${TEAMS[tr.team.id]} (${tr.wins}-${tr.losses})">`
+    ).join('');
+  }).catch(() => {});
+}
+
 function renderBattingTable(my, liveData, isHome) {
-  const players = Object.values(my.players).map(p => ({
-    name: p.person.fullName,
-    num: p.jerseyNumber || '',
-    pos: p.position.abbreviation,
-    order: p.battingOrder || 999,
-   ...p.stats.batting,
-    avg: p.seasonStats.batting.avg,
-    obp: p.seasonStats.batting.obp,
-    slg: p.seasonStats.batting.slg,
-    ops: p.seasonStats.batting.ops,
-    woba: calcWoba(p.seasonStats.batting)
-  })).filter(p => p.atBats > 0 || p.plateAppearances > 0);
+  const players = Object.values(my.players).map(p => {
+    const bo = parseInt(p.battingOrder) || 0;
+    return {
+      name: p.person.fullName,
+      num: p.jerseyNumber || '',
+      pos: p.position.abbreviation,
+      order: p.battingOrder || 999,
+      slot: Math.floor(bo / 100),
+      sub: bo % 100,
+     ...p.stats.batting,
+      avg: p.seasonStats.batting.avg,
+      obp: p.seasonStats.batting.obp,
+      slg: p.seasonStats.batting.slg,
+      ops: p.seasonStats.batting.ops,
+      woba: calcWoba(p.seasonStats.batting)
+    };
+  }).filter(p => p.atBats > 0 || p.plateAppearances > 0);
 
   players.sort((a,b) => {
     const va = a[sortState.key], vb = b[sortState.key];
@@ -120,7 +146,9 @@ function renderBattingTable(my, liveData, isHome) {
     <th data-key="avg" class="divider">AVG</th><th data-key="obp">OBP</th>
     <th data-key="slg">SLG</th><th data-key="ops">OPS</th><th data-key="woba">wOBA</th></tr></thead>`;
   players.forEach(p => {
-    html += `<tr><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.atBats}</td>
+    const isSub = p.sub > 0;
+    const trClass = isSub ? ' class="box-sub"' : '';
+    html += `<tr${trClass}><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.atBats}</td>
       <td>${p.runs}</td><td>${p.hits}</td><td>${p.rbi}</td>
       <td>${p.baseOnBalls}</td><td>${p.strikeOuts}</td><td class="divider">${p.avg}</td>
       <td>${p.obp}</td><td>${p.slg}</td><td>${p.ops}</td><td>${p.woba}</td></tr>`;
@@ -665,38 +693,16 @@ function renderLiveInfo(liveData, isHome, state, inningLabel) {
   const strikes = play.count.strikes;
   const outs = play.count.outs;
 
-  const bannerStyle = localStorage.getItem('bannerStyle') || 'scoreboard';
-
-  if (bannerStyle === 'scoreboard') {
-    const ballDots = Array.from({length:4}, (_,i) => `<span class="ind-dot ${i < balls ? 'ind-ball-on' : 'ind-off'}">●</span>`).join('');
-    const strikeDots = Array.from({length:3}, (_,i) => `<span class="ind-dot ${i < strikes ? 'ind-strike-on' : 'ind-off'}">●</span>`).join('');
-    const outDots = Array.from({length:3}, (_,i) => `<span class="ind-dot ${i < outs ? 'ind-out-on' : 'ind-off'}">●</span>`).join('');
-
-    el.innerHTML = `
-      <div class="sb-panel">
-        <div class="sb-player">${playerName} <span class="sb-role">${role}</span></div>
-        <div class="sb-indicators">
-          <div class="sb-row"><span class="sb-label">B</span>${ballDots}</div>
-          <div class="sb-row"><span class="sb-label">S</span>${strikeDots}</div>
-          <div class="sb-row"><span class="sb-label">O</span>${outDots}</div>
-        </div>
-        <div class="sb-inning">${inningLabel}</div>
-        ${challengeHtml}
-      </div>`;
-  } else {
-    const outDots = '●'.repeat(outs) + '○'.repeat(Math.max(0, 3 - outs));
-    el.innerHTML = `
-      <div class="mc-panel">
-        <span class="mc-player">${playerName}</span>
-        <span class="mc-sep">│</span>
-        <span class="mc-count">${balls}-${strikes}</span>
-        <span class="mc-sep">│</span>
-        <span class="mc-outs">${outDots}</span>
-        <span class="mc-sep">│</span>
-        <span class="mc-inning">${inningLabel}</span>
-        ${challengeHtml}
-      </div>`;
-  }
+  const outDots = '●'.repeat(outs) + '○'.repeat(Math.max(0, 3 - outs));
+  el.innerHTML = `
+    <span class="mc-player">${playerName}</span>
+    <span class="mc-sep">│</span>
+    <span class="mc-count">${balls}-${strikes}</span>
+    <span class="mc-sep">│</span>
+    <span class="mc-outs">${outDots}</span>
+    <span class="mc-sep">│</span>
+    <span class="mc-inning">${inningLabel}</span>
+    ${challengeHtml}`;
 }
 
 function renderAtBat(liveData, isHome) {
@@ -804,13 +810,6 @@ document.querySelectorAll('nav button').forEach(btn => {
   btn.onclick = () => { currentTab = btn.dataset.tab; update(); };
 });
 
-document.getElementById('bannerToggle').onclick = () => {
-  const current = localStorage.getItem('bannerStyle') || 'scoreboard';
-  const next = current === 'scoreboard' ? 'minimal' : 'scoreboard';
-  localStorage.setItem('bannerStyle', next);
-  update();
-};
-
 document.getElementById('zoneBtn').onclick = showZoneModal;
 document.getElementById('playsBtn').onclick = showPlaysModal;
 document.getElementById('statsBtn').onclick = showTeamStats;
@@ -877,6 +876,7 @@ async function update() {
       document.getElementById('scoreText').textContent = 'No game today';
       document.getElementById('content').innerHTML = '';
       document.getElementById('atbat').innerHTML = '';
+      renderDivisionStandings();
       return;
     }
     const res = await fetch(`https://statsapi.mlb.com/api/v1.1/game/${gamePk}/feed/live`);
@@ -909,6 +909,10 @@ async function update() {
 
       renderLiveInfo(liveData, isHome, state, inningLabel);
 
+      if (document.getElementById('zoneModal').style.display === 'flex') {
+        renderAtBat(liveData, isHome);
+      }
+
       if (currentTab === 'box') renderBattingTable(my, liveData, isHome);
       else if (currentTab === 'scorecard') renderScorecard(liveData, isHome);
 
@@ -917,6 +921,7 @@ async function update() {
 
     updateActiveTab();
     renderLeagueScores();
+    renderDivisionStandings();
   } catch (err) {
     console.error('Update failed:', err);
     document.getElementById('scoreText').textContent = 'Error loading game data';
