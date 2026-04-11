@@ -23,7 +23,7 @@ function applyTeamColors(id) {
 let gamePk = null;
 let currentTab = 'scorecard';
 let sortState = { key: 'order', asc: true };
-let pitchSortState = { key: 'ipSort', asc: false };
+let pitchSortState = { key: 'appearance', asc: true };
 let latestGameState = null;
 let standingsCache = null;
 
@@ -114,9 +114,14 @@ function renderDivisionStandings() {
 }
 
 function renderBattingTable(my, liveData, isHome) {
+  const currentPlay = liveData.plays?.currentPlay;
+  const activeBatterId = currentPlay?.matchup?.batter?.id;
+  const activePitcherId = currentPlay?.matchup?.pitcher?.id;
+
   const players = Object.values(my.players).map(p => {
     const bo = parseInt(p.battingOrder) || 0;
     return {
+      id: p.person.id,
       name: p.person.fullName,
       num: p.jerseyNumber || '',
       pos: p.position.abbreviation,
@@ -128,7 +133,9 @@ function renderBattingTable(my, liveData, isHome) {
       obp: p.seasonStats.batting.obp,
       slg: p.seasonStats.batting.slg,
       ops: p.seasonStats.batting.ops,
-      woba: calcWoba(p.seasonStats.batting)
+      woba: calcWoba(p.seasonStats.batting),
+      sK: p.seasonStats.batting.strikeOuts || 0,
+      sBB: p.seasonStats.batting.baseOnBalls || 0
     };
   }).filter(p => p.atBats > 0 || p.plateAppearances > 0);
 
@@ -140,21 +147,25 @@ function renderBattingTable(my, liveData, isHome) {
   });
 
   let html = `<table id="battingTable" class="my-team"><thead>
-    <tr class="group-row"><th colspan="1"></th><th colspan="6">Game</th><th colspan="5" class="divider">Season</th></tr>
+    <tr class="group-row"><th colspan="1"></th><th colspan="6">Game</th><th colspan="7" class="divider">Season</th></tr>
     <tr>
     <th data-key="name">Player</th>
     <th data-key="atBats">AB</th><th data-key="runs">R</th>
     <th data-key="hits">H</th><th data-key="rbi">RBI</th>
     <th data-key="baseOnBalls">BB</th><th data-key="strikeOuts">K</th>
     <th data-key="avg" class="divider">AVG</th><th data-key="obp">OBP</th>
-    <th data-key="slg">SLG</th><th data-key="ops">OPS</th><th data-key="woba">wOBA</th></tr></thead>`;
+    <th data-key="slg">SLG</th><th data-key="ops">OPS</th><th data-key="woba">wOBA</th>
+    <th data-key="sK">K</th><th data-key="sBB">BB</th></tr></thead>`;
   players.forEach(p => {
     const isSub = p.sub > 0;
-    const trClass = isSub ? ' class="box-sub"' : '';
+    const isActive = p.id === activeBatterId;
+    const classes = [isSub ? 'box-sub' : '', isActive ? 'active-player' : ''].filter(Boolean).join(' ');
+    const trClass = classes ? ` class="${classes}"` : '';
     html += `<tr${trClass}><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.atBats}</td>
       <td>${p.runs}</td><td>${p.hits}</td><td>${p.rbi}</td>
       <td>${p.baseOnBalls}</td><td>${p.strikeOuts}</td><td class="divider">${p.avg}</td>
-      <td>${p.obp}</td><td>${p.slg}</td><td>${p.ops}</td><td>${p.woba}</td></tr>`;
+      <td>${p.obp}</td><td>${p.slg}</td><td>${p.ops}</td><td>${p.woba}</td>
+      <td>${p.sK}</td><td>${p.sBB}</td></tr>`;
   });
   // Team totals row
   const t = players.reduce((t, p) => {
@@ -165,7 +176,7 @@ function renderBattingTable(my, liveData, isHome) {
   html += `<tr class="team-totals"><td><strong>Team</strong></td><td>${t.ab}</td>
     <td>${t.r}</td><td>${t.h}</td><td>${t.rbi}</td>
     <td>${t.bb}</td><td>${t.k}</td>
-    <td class="divider"></td><td></td><td></td><td></td><td></td></tr>`;
+    <td class="divider"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
   document.getElementById('content').innerHTML = html + '</table>';
 
   document.querySelectorAll('#battingTable th[data-key]').forEach(th => {
@@ -199,6 +210,15 @@ function renderPitchingTable(my, liveData, isHome) {
     }
   });
 
+  // Build appearance order from play-by-play data
+  const appearanceOrder = {};
+  let orderIdx = 0;
+  allPlays.forEach(play => {
+    if (play.about.halfInning !== myHalf || !play.about.isComplete) return;
+    const pid = play.matchup.pitcher.id;
+    if (!(pid in appearanceOrder)) appearanceOrder[pid] = orderIdx++;
+  });
+
   const pitchers = Object.values(my.players).map(p => {
     const ss = p.seasonStats.pitching;
     const hand = (p.person.pitchHand?.code || 'R');
@@ -206,6 +226,7 @@ function renderPitchingTable(my, liveData, isHome) {
     const bf = gStats.battersFaced || 0;
     const fpCount = fpsMap[p.person.id] || 0;
     return {
+      id: p.person.id,
       name: p.person.fullName,
       num: p.jerseyNumber || '',
       pos: hand + 'HP',
@@ -214,6 +235,7 @@ function renderPitchingTable(my, liveData, isHome) {
       fps: `${fpCount}/${bf}`,
       era: ss.era,
       ipSort: parseFloat(gStats.inningsPitched || 0),
+      appearance: appearanceOrder[p.person.id] ?? 999,
       record: `${ss.wins || 0}-${ss.losses || 0}`,
       sIP: ss.inningsPitched || '0.0',
       sK: ss.strikeOuts || 0,
@@ -256,9 +278,14 @@ function renderPitchingTable(my, liveData, isHome) {
     <th data-key="pitchesThrown">PC</th><th data-key="fps">FPS</th><th data-key="era" class="divider">ERA</th>
     <th data-key="record">W-L</th><th data-key="sIP">IP</th>
     <th data-key="sK">K</th><th data-key="sBB">BB</th></tr></thead>`;
+  const currentPlay = liveData.plays?.currentPlay;
+  const activePitcherId = currentPlay?.matchup?.pitcher?.id;
+
   pitchers.forEach(p => {
     const pcClass = p.pitchesThrown>100?'high-pc':'';
-    html += `<tr><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.inningsPitched}</td><td>${p.hits}</td>
+    const isActive = p.id === activePitcherId;
+    const trClass = isActive ? ' class="active-player"' : '';
+    html += `<tr${trClass}><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.inningsPitched}</td><td>${p.hits}</td>
       <td>${p.runs}</td><td>${p.earnedRuns}</td><td>${p.baseOnBalls}</td>
       <td>${p.strikeOuts}</td><td class="${pcClass}">${p.pitchesThrown}</td><td>${totals.bf ? p.fps : ''}</td><td class="divider">${p.era}</td>
       <td>${p.record}</td><td>${p.sIP}</td><td>${p.sK}</td><td>${p.sBB}</td></tr>`;
@@ -364,6 +391,26 @@ function showPlaysModal() {
 
 let timelineFilter = 'scoring';
 
+function getChallengeType(play) {
+  if (!play.about.hasReview || !play.reviewDetails) return null;
+  const rt = play.reviewDetails.reviewType;
+  if (rt === 'MJ') return 'abs';
+  return 'review';
+}
+
+function getAbsChallenges(play) {
+  // ABS challenges live on individual pitch events within a play
+  return (play.playEvents || [])
+    .filter(pe => pe.reviewDetails && pe.reviewDetails.reviewType === 'MJ')
+    .map(pe => ({
+      player: pe.reviewDetails.player?.fullName || 'Unknown',
+      overturned: pe.reviewDetails.isOverturned,
+      inProgress: pe.reviewDetails.inProgress,
+      challengeTeamId: pe.reviewDetails.challengeTeamId,
+      pitchNumber: pe.pitchNumber
+    }));
+}
+
 function renderTimeline(liveData, isHome, toModal) {
   const allPlays = (liveData.plays.allPlays || []).filter(p => p.about.isComplete && p.result.type === 'atBat');
 
@@ -371,16 +418,22 @@ function renderTimeline(liveData, isHome, toModal) {
   let html = '<div class="tl-filter">';
   html += `<button class="tl-btn${timelineFilter === 'all' ? ' active' : ''}" data-filter="all">All Plays</button>`;
   html += `<button class="tl-btn${timelineFilter === 'scoring' ? ' active' : ''}" data-filter="scoring">Scoring</button>`;
+  html += `<button class="tl-btn${timelineFilter === 'challenges' ? ' active' : ''}" data-filter="challenges">Challenges</button>`;
   html += '</div>';
 
   // Filter plays
-  const plays = timelineFilter === 'scoring'
-    ? allPlays.filter(p => p.result.rbi > 0 || /homers|scores/i.test(p.result.description))
-    : allPlays;
+  let plays;
+  if (timelineFilter === 'scoring') {
+    plays = allPlays.filter(p => p.result.rbi > 0 || /homers|scores/i.test(p.result.description));
+  } else if (timelineFilter === 'challenges') {
+    plays = allPlays.filter(p => getChallengeType(p) || getAbsChallenges(p).length > 0);
+  } else {
+    plays = allPlays;
+  }
 
   html += '<div class="timeline">';
   if (plays.length === 0) {
-    html += '<div class="play opp-play">No plays yet</div>';
+    html += '<div class="play opp-play">' + (timelineFilter === 'challenges' ? 'No challenges this game' : 'No plays yet') + '</div>';
   } else {
     // Group by inning
     const byInning = {};
@@ -395,18 +448,42 @@ function renderTimeline(liveData, isHome, toModal) {
     inningNums.forEach(inn => {
       html += `<div class="tl-inning-header">Inning ${inn}</div>`;
       byInning[inn].forEach(play => {
+        const challengeType = getChallengeType(play);
+        const absChallenges = getAbsChallenges(play);
         const battingTeam = play.about.halfInning === 'top' ? liveData.boxscore.teams.away : liveData.boxscore.teams.home;
         const isMyTeam = battingTeam.team.id === TEAM_ID;
         const half = play.about.halfInning === 'top' ? '▲' : '▼';
-        const cls = isMyTeam ? 'my-play' : 'opp-play';
         const event = play.result.event || '';
         const batter = play.matchup.batter.fullName;
 
-        html += `<div class="play ${cls}">`;
+        // Determine play class: manager challenge > normal play styling
+        let playCls;
+        if (challengeType === 'review') playCls = 'challenge-play';
+        else if (absChallenges.length > 0) playCls = 'abs-challenge-play';
+        else playCls = isMyTeam ? 'my-play' : 'opp-play';
+
+        html += `<div class="play ${playCls}">`;
         html += `<div class="tl-half">${half}</div>`;
         html += `<div class="tl-body">`;
-        html += `<div class="tl-headline">${batter} — ${event}</div>`;
+
+        // Headline with manager challenge badge if applicable
+        if (challengeType === 'review') {
+          const outcome = play.reviewDetails.isOverturned ? 'Overturned' : 'Confirmed';
+          html += `<div class="tl-headline">${batter} — ${event}<span class="ch-badge ch-badge-review">Challenge · ${outcome}</span></div>`;
+        } else {
+          html += `<div class="tl-headline">${batter} — ${event}</div>`;
+        }
+
         html += `<div class="tl-detail">${play.result.description || ''}</div>`;
+
+        // ABS challenge details from pitch events
+        if (absChallenges.length > 0) {
+          absChallenges.forEach(ac => {
+            const outcome = ac.inProgress ? 'In Progress' : ac.overturned ? 'Overturned' : 'Confirmed';
+            html += `<div class="tl-detail"><span class="ch-badge ch-badge-abs">ABS · ${outcome}</span> ${ac.player} challenged pitch #${ac.pitchNumber}</div>`;
+          });
+        }
+
         if (play.result.rbi > 0) {
           html += `<div class="meta">${batter} — ${play.result.rbi} RBI</div>`;
         }
@@ -524,6 +601,8 @@ function renderScorecard(liveData, isHome) {
   const allPlays = liveData.plays.allPlays || [];
   const innings = liveData.linescore.innings || [];
   const numInnings = Math.max(innings.length, 9);
+  const currentPlay = liveData.plays?.currentPlay;
+  const activeBatterId = currentPlay?.matchup?.batter?.id;
 
   // Build lineup slots from battingOrder field
   const lineup = {};
@@ -614,15 +693,27 @@ function renderScorecard(liveData, isHome) {
     if (players.length === 0) { html += `<tr><td class="sc-name">—</td>${'<td class="sc-cell"></td>'.repeat(numInnings + 3)}</tr>`; continue; }
 
     players.forEach((player, pidx) => {
-      const trClass = pidx > 0 ? ' class="sc-sub"' : '';
+      const isActive = player.id === activeBatterId;
+      const classes = [pidx > 0 ? 'sc-sub' : '', isActive ? 'active-player' : ''].filter(Boolean).join(' ');
+      const trClass = classes ? ` class="${classes}"` : '';
       html += `<tr${trClass}>`;
       html += `<td class="sc-name"><span class="sc-num">${player.num}</span>${player.name} <span class="sc-pos-tag">${player.pos}</span></td>`;
 
       let pAB = 0, pH = 0, pR = 0;
+      // Current live at-bat info for this player
+      const isLiveAB = player.id === activeBatterId && currentPlay && !currentPlay.about.isComplete
+        && currentPlay.about.halfInning === myHalf;
+      const liveInning = isLiveAB ? currentPlay.about.inning : null;
+      const liveCount = isLiveAB ? `${currentPlay.count.balls}-${currentPlay.count.strikes}` : '';
+
       for (let inn = 1; inn <= numInnings; inn++) {
         const cellPlays = (grid[slot]?.[inn] || []).filter(p => p.matchup.batter.id === player.id);
         if (cellPlays.length === 0) {
-          html += '<td class="sc-cell"></td>';
+          if (inn === liveInning) {
+            html += `<td class="sc-cell"><div class="sc-ab"><span class="sc-count sc-live-count">${liveCount}</span></div></td>`;
+          } else {
+            html += '<td class="sc-cell"></td>';
+          }
         } else {
           const results = cellPlays.map(p => {
             const ev = p.result.event;
@@ -823,6 +914,42 @@ document.getElementById('playsClose').onclick = () => document.getElementById('p
 document.getElementById('playsModal').onclick = e => { if (e.target.id === 'playsModal') e.target.style.display = 'none'; };
 document.getElementById('tsClose').onclick = () => document.getElementById('teamStatsModal').style.display = 'none';
 document.getElementById('teamStatsModal').onclick = e => { if (e.target.id === 'teamStatsModal') e.target.style.display = 'none'; };
+document.getElementById('standingsClose').onclick = () => document.getElementById('standingsModal').style.display = 'none';
+document.getElementById('standingsModal').onclick = e => { if (e.target.id === 'standingsModal') e.target.style.display = 'none'; };
+
+// Full league standings popup on division bar click
+document.getElementById('divStandings').onclick = () => showStandingsModal();
+
+const DIV_NAMES = { 201:'AL East', 202:'AL Central', 200:'AL West', 204:'NL East', 205:'NL Central', 203:'NL West' };
+
+function showStandingsModal() {
+  fetchStandings().then(records => {
+    let html = '';
+    // Sort divisions: AL East, Central, West then NL East, Central, West
+    const divOrder = [201, 202, 200, 204, 205, 203];
+    const sorted = divOrder.map(id => records.find(r => r.division?.id === id)).filter(Boolean);
+    // Fallback if division IDs don't match
+    const divisions = sorted.length ? sorted : records;
+
+    divisions.forEach(div => {
+      const divName = DIV_NAMES[div.division?.id] || div.division?.name || 'Division';
+      html += `<div class="standings-division">`;
+      html += `<div class="standings-division-title">${divName}</div>`;
+      html += `<table class="standings-table"><thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>STRK</th></tr></thead><tbody>`;
+      const teams = div.teamRecords.sort((a, b) => parseInt(a.divisionRank) - parseInt(b.divisionRank));
+      teams.forEach(tr => {
+        const isMy = tr.team.id === TEAM_ID ? ' st-my-team' : '';
+        const gb = tr.divisionGamesBack === '-' ? '—' : tr.divisionGamesBack;
+        html += `<tr class="${isMy}"><td><div class="st-team-cell"><img src="${LOGO_URL(tr.team.id)}" class="st-logo" alt="">${tr.team.name}</div></td>`;
+        html += `<td>${tr.wins}</td><td>${tr.losses}</td><td>${tr.winningPercentage}</td><td>${gb}</td><td>${tr.streak?.streakCode || ''}</td></tr>`;
+      });
+      html += '</tbody></table></div>';
+    });
+
+    document.getElementById('standingsModalBody').innerHTML = html;
+    document.getElementById('standingsModal').style.display = 'flex';
+  }).catch(() => {});
+}
 
 function updateActiveTab() {
   document.querySelectorAll('nav button').forEach(btn => {
@@ -873,12 +1000,12 @@ async function update() {
     const opp = liveData.boxscore.teams[isHome ? 'away' : 'home'];
 
     if (state === 'Preview') {
-      const time = gameData.datetime.time + ' ' + gameData.datetime.ampm;
+      const localTime = new Date(gameData.datetime.dateTime).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
       const status = gameData.status.detailedState;
       const oppId = opp.team.id;
       document.getElementById('scoreText').innerHTML = `
         ${TEAMS[TEAM_ID]} vs <span class="opp-link" data-team="${oppId}">${opp.team.name}</span>
-        <span style="float:right">${status} — ${time}</span>`;
+        <span style="float:right">${status} — ${localTime}</span>`;
       document.getElementById('liveInfo').innerHTML = '';
       renderPreview(gameData, isHome);
       document.getElementById('atbat').innerHTML = '';
@@ -892,6 +1019,15 @@ async function update() {
 
       latestGameState = { my, opp, liveData, isHome, state };
 
+      // Auto-switch tab based on batting/pitching (#9)
+      if (state !== 'Final') {
+        const currentPlay = liveData.plays?.currentPlay;
+        if (currentPlay && !currentPlay.about.isComplete) {
+          const myBatting = isHome ? currentPlay.about.halfInning === 'bottom' : currentPlay.about.halfInning === 'top';
+          currentTab = myBatting ? 'scorecard' : 'box';
+        }
+      }
+
       renderLiveInfo(liveData, isHome, state, inningLabel);
 
       if (document.getElementById('zoneModal').style.display === 'flex') {
@@ -899,14 +1035,16 @@ async function update() {
       }
 
       const contentEl = document.getElementById('content');
-      const scrollX = contentEl.scrollLeft;
       const scrollY = contentEl.scrollTop;
+      const scEl = contentEl.querySelector('.scorecard');
+      const scScrollX = scEl ? scEl.scrollLeft : 0;
 
       if (currentTab === 'box') renderBattingTable(my, liveData, isHome);
       else if (currentTab === 'scorecard') renderScorecard(liveData, isHome);
 
-      contentEl.scrollLeft = scrollX;
       contentEl.scrollTop = scrollY;
+      const newSc = contentEl.querySelector('.scorecard');
+      if (newSc) newSc.scrollLeft = scScrollX;
 
       document.getElementById('atbat').innerHTML = '';
     }

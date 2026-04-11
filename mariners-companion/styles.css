@@ -133,6 +133,29 @@ th:hover { background:color-mix(in srgb, var(--primary), #fff 20%); }
 .tl-detail { font-size:12px; color:#999; margin:2px 0; line-height:1.4; }
 .opp-play .tl-headline { color:#888; font-weight:400; }
 
+/* Active batter/pitcher highlight */
+.active-player { background:rgba(0,163,224,.12) !important; }
+.active-player td:first-child, .active-player .sc-name { border-left:3px solid var(--accent); }
+.play.challenge-play { background:#1a1500; border-left:4px solid #e8a317; }
+.play.challenge-play .tl-headline { color:#e8a317; }
+.play.abs-challenge-play { background:#1a0025; border-left:4px solid #a855f7; }
+.play.abs-challenge-play .tl-headline { color:#a855f7; }
+.ch-badge { font-size:10px; font-weight:700; padding:2px 6px; border-radius:3px; margin-left:6px; vertical-align:middle; }
+.ch-badge-review { background:rgba(232,163,23,.2); color:#e8a317; }
+.ch-badge-abs { background:rgba(168,85,247,.2); color:#a855f7; }
+
+/* Standings modal */
+.standings-division { margin-bottom:16px; }
+.standings-division-title { font-size:14px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:1px; padding:6px 0; border-bottom:1px solid #333; margin-bottom:4px; }
+.standings-table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:8px; }
+.standings-table th { text-align:left; color:#888; font-size:11px; padding:4px 6px; border-bottom:1px solid #333; }
+.standings-table th:not(:first-child) { text-align:center; }
+.standings-table td { padding:5px 6px; border-bottom:1px solid #1a1a1a; }
+.standings-table td:not(:first-child) { text-align:center; }
+.standings-table .st-my-team { background:var(--primary); }
+.standings-table .st-team-cell { display:flex; align-items:center; gap:6px; }
+.standings-table .st-logo { width:18px; height:18px; object-fit:contain; }
+
 .high-pc { color:#ff6464; }
 .preview { padding:24px; text-align:center; }
 .matchup-header { font-size:22px; font-weight:700; margin-bottom:8px; }
@@ -155,6 +178,7 @@ th:hover { background:color-mix(in srgb, var(--primary), #fff 20%); }
 .sc-ab { display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:4px; padding:3px 4px; }
 .sc-diamond { display:block; flex-shrink:0; }
 .sc-count { font-size:11px; color:#888; font-weight:400; }
+.sc-live-count { color:var(--accent); font-weight:700; font-size:14px; }
 .sc-hit { color:#00d084; font-size:14px; }
 .sc-ob { color:#4db8ff; font-size:14px; }
 .sc-out { color:#e05555; font-size:14px; }
