@@ -1,0 +1,31 @@
+name: Scrape Challenge Stats
+
+on:
+  schedule:
+    # Run daily at 10 AM UTC (~3-6 AM US timezones, after all games finish)
+    - cron: '0 10 * * *'
+  workflow_dispatch: # Manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run challenge scraper
+        run: node scripts/scrape-challenges.js
+
+      - name: Commit updated challenges.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add mariners-companion/challenges.json
+          git diff --cached --quiet || git commit -m "Update challenge stats [skip ci]"
+          git push
