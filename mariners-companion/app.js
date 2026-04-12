@@ -453,22 +453,16 @@ function showTeamStats() {
   body += statLine('PO', ts.pickoffs || 0);
   body += '</div>';
 
-  // Season challenge stats card
+  // Season challenge stats card — selected team only
   const myStats = getTeamChallengeStats(TEAM_ID);
-  const oppTeamId = isHome ? liveData.boxscore.teams.away.team.id : liveData.boxscore.teams.home.team.id;
-  const oppStats = getTeamChallengeStats(oppTeamId);
   body += '<div class="ts-card"><div class="ts-card-title">Season Challenges</div>';
-  body += `<div class="ts-sub">${TEAMS[TEAM_ID]}</div>`;
   body += statLine('ABS', `${myStats.absWon}/${myStats.absUsed} won`);
   body += statLine('Manager', `${myStats.managerWon}/${myStats.managerUsed} won`);
-  body += `<div class="ts-sub" style="margin-top:6px">${TEAMS[oppTeamId]}</div>`;
-  body += statLine('ABS', `${oppStats.absWon}/${oppStats.absUsed} won`);
-  body += statLine('Manager', `${oppStats.managerWon}/${oppStats.managerUsed} won`);
 
   // Player leaderboard
   const myPlayers = getPlayerChallengeStats(TEAM_ID);
   if (myPlayers.length) {
-    body += `<div class="ts-sub" style="margin-top:8px">${TEAMS[TEAM_ID]} Players</div>`;
+    body += `<div class="ts-sub" style="margin-top:8px">Players</div>`;
     myPlayers.slice(0, 5).forEach(p => {
       body += statLine(`${p.name} <span class="p-pos">${p.role}</span>`, `${p.won}/${p.used}`);
     });
@@ -527,17 +521,13 @@ function renderTimeline(liveData, isHome, toModal) {
   html += `<button class="tl-btn${timelineFilter === 'challenges' ? ' active' : ''}" data-filter="challenges">Challenges</button>`;
   html += '</div>';
 
-  // Challenge season summary when on Challenges tab
+  // Challenge season summary when on Challenges tab — selected team only
   if (timelineFilter === 'challenges') {
-    const gameData = liveData._gameData;
-    const homeId = gameData.teams.home.id;
-    const awayId = gameData.teams.away.id;
-    const hStats = getTeamChallengeStats(homeId);
-    const aStats = getTeamChallengeStats(awayId);
+    const myStats = getTeamChallengeStats(TEAM_ID);
     html += '<div class="ch-season-summary">';
-    html += `<span><strong>${TEAMS[awayId]}</strong> ABS ${aStats.absWon}/${aStats.absUsed}</span>`;
+    html += `<span><strong>${TEAMS[TEAM_ID]}</strong> ABS ${myStats.absWon}/${myStats.absUsed}</span>`;
     html += `<span class="ch-sep">Season</span>`;
-    html += `<span><strong>${TEAMS[homeId]}</strong> ABS ${hStats.absWon}/${hStats.absUsed}</span>`;
+    html += `<span>Manager ${myStats.managerWon}/${myStats.managerUsed}</span>`;
     html += '</div>';
   }
 
