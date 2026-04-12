@@ -76,7 +76,7 @@
 1. ~~**Challenges Tab in Plays Popup**~~ ✅ — Dedicated filter tab in the Plays modal to show only challenge plays (both manager and ABS)
 2. ~~**Fix Side Scrolling on Mobile**~~ ✅ — Preserve horizontal scroll position on the scorecard across refreshes
 3. ~~**Strikeout & Walk Season Stats**~~ ✅ — Add K and BB season totals to the batting and pitching tables
-4. **Season Challenge Stats** — Show challenge usage stats for the season at both team and player level
+4. ~~**Season Challenge Stats**~~ ✅ — Season challenge database with nightly GitHub Actions scraper, challenge stats card in Team Stats modal, and season summary in Challenges tab
 5. **Android Scorebug Widget** — Standalone Android home screen widget displaying the live score bug
 6. ~~**Pitcher Order in Box Score**~~ ✅ — Sort pitchers in the pitching table by order of appearance
 7. ~~**Highlight Current Battery/Pitcher**~~ ✅ — Visually highlight the active batter or pitcher row in the box score and scorecard

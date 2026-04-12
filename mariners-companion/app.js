@@ -22,14 +22,94 @@ function applyTeamColors(id) {
 }
 let gamePk = null;
 let currentTab = 'scorecard';
+let userPickedTab = false;
 let sortState = { key: 'order', asc: true };
 let pitchSortState = { key: 'appearance', asc: true };
 let latestGameState = null;
 let standingsCache = null;
+let challengeDb = null; // cached challenges.json data
 
 const LOGO_URL = id => `https://www.mlbstatic.com/team-logos/${id}.svg`;
 const teamBtn = document.getElementById('teamBtn');
 const teamList = document.getElementById('teamList');
+
+// Load season challenge database
+async function loadChallengeDb() {
+  try {
+    const res = await fetch('challenges.json');
+    if (!res.ok) return;
+    challengeDb = await res.json();
+    console.log(`Challenge DB loaded: ${challengeDb.challenges.length} records`);
+  } catch { /* challenges.json may not exist yet */ }
+}
+loadChallengeDb();
+
+// Merge static DB challenges with live game challenges for complete season data
+function getSeasonChallenges() {
+  const all = challengeDb ? [...challengeDb.challenges] : [];
+  // Add current game's live challenges (if not already in the DB)
+  if (latestGameState && gamePk) {
+    const { liveData, isHome } = latestGameState;
+    const gameData = liveData._gameData;
+    const homeId = gameData.teams.home.id;
+    const awayId = gameData.teams.away.id;
+    const dbHasGame = all.some(c => c.gamePk === gamePk);
+    if (!dbHasGame) {
+      const plays = liveData.plays?.allPlays || [];
+      const today = new Date().toISOString().slice(0, 10);
+      for (const play of plays) {
+        if (!play.about.isComplete) continue;
+        const battingTeamId = play.about.halfInning === 'top' ? awayId : homeId;
+        const inning = play.about.inning;
+        // Manager challenges
+        if (play.about.hasReview && play.reviewDetails) {
+          const rt = play.reviewDetails.reviewType;
+          if (rt === 'MF' || rt === 'MA') {
+            all.push({ gamePk, date: today, inning, type: 'manager', reviewType: rt,
+              result: play.reviewDetails.isOverturned ? 'overturned' : 'confirmed',
+              teamId: play.reviewDetails.challengeTeamId || null,
+              team: TEAMS[play.reviewDetails.challengeTeamId] || null,
+              playerName: null, playerId: null, role: 'manager' });
+          }
+        }
+        // ABS challenges from pitch events
+        for (const pe of (play.playEvents || [])) {
+          if (!pe.reviewDetails || pe.reviewDetails.reviewType !== 'MJ') continue;
+          if (pe.reviewDetails.inProgress) continue;
+          const rd = pe.reviewDetails;
+          const role = rd.player?.id === play.matchup.batter.id ? 'batter' : 'catcher';
+          all.push({ gamePk, date: today, inning, type: 'abs', reviewType: 'MJ',
+            result: rd.isOverturned ? 'overturned' : 'confirmed',
+            teamId: rd.challengeTeamId, team: TEAMS[rd.challengeTeamId] || null,
+            playerName: rd.player?.fullName || null, playerId: rd.player?.id || null, role });
+        }
+      }
+    }
+  }
+  return all;
+}
+
+function getTeamChallengeStats(teamId) {
+  const all = getSeasonChallenges().filter(c => c.teamId === teamId);
+  const abs = all.filter(c => c.type === 'abs');
+  const mgr = all.filter(c => c.type === 'manager');
+  return {
+    absUsed: abs.length, absWon: abs.filter(c => c.result === 'overturned').length,
+    managerUsed: mgr.length, managerWon: mgr.filter(c => c.result === 'overturned').length
+  };
+}
+
+function getPlayerChallengeStats(teamId) {
+  const all = getSeasonChallenges().filter(c => c.type === 'abs' && c.teamId === teamId && c.playerId);
+  const byPlayer = {};
+  all.forEach(c => {
+    const key = c.playerId;
+    if (!byPlayer[key]) byPlayer[key] = { name: c.playerName, role: c.role, used: 0, won: 0 };
+    byPlayer[key].used++;
+    if (c.result === 'overturned') byPlayer[key].won++;
+  });
+  return Object.values(byPlayer).sort((a, b) => b.used - a.used);
+}
 
 function setTeamBtn(id) {
   teamBtn.innerHTML = `<img src="${LOGO_URL(id)}" class="team-logo" alt="">${TEAMS[id]}`;
@@ -48,6 +128,7 @@ Object.entries(TEAMS).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([id,abv]) =
     applyTeamColors(TEAM_ID);
     teamList.classList.remove('open');
     gamePk = null;
+    userPickedTab = false;
     update();
   };
   teamList.appendChild(item);
@@ -69,6 +150,7 @@ document.getElementById('scoreText').addEventListener('click', e => {
   setTeamBtn(TEAM_ID);
   applyTeamColors(TEAM_ID);
   gamePk = null;
+  userPickedTab = false;
   update();
 });
 
@@ -369,7 +451,31 @@ function showTeamStats() {
   body += statLine('SB', sbList.length ? playerList(sbList) : (ts.stolenBases || 0));
   body += statLine('CS', csList.length ? playerList(csList) : (ts.caughtStealing || 0));
   body += statLine('PO', ts.pickoffs || 0);
-  body += '</div></div>';
+  body += '</div>';
+
+  // Season challenge stats card
+  const myStats = getTeamChallengeStats(TEAM_ID);
+  const oppTeamId = isHome ? liveData.boxscore.teams.away.team.id : liveData.boxscore.teams.home.team.id;
+  const oppStats = getTeamChallengeStats(oppTeamId);
+  body += '<div class="ts-card"><div class="ts-card-title">Season Challenges</div>';
+  body += `<div class="ts-sub">${TEAMS[TEAM_ID]}</div>`;
+  body += statLine('ABS', `${myStats.absWon}/${myStats.absUsed} won`);
+  body += statLine('Manager', `${myStats.managerWon}/${myStats.managerUsed} won`);
+  body += `<div class="ts-sub" style="margin-top:6px">${TEAMS[oppTeamId]}</div>`;
+  body += statLine('ABS', `${oppStats.absWon}/${oppStats.absUsed} won`);
+  body += statLine('Manager', `${oppStats.managerWon}/${oppStats.managerUsed} won`);
+
+  // Player leaderboard
+  const myPlayers = getPlayerChallengeStats(TEAM_ID);
+  if (myPlayers.length) {
+    body += `<div class="ts-sub" style="margin-top:8px">${TEAMS[TEAM_ID]} Players</div>`;
+    myPlayers.slice(0, 5).forEach(p => {
+      body += statLine(`${p.name} <span class="p-pos">${p.role}</span>`, `${p.won}/${p.used}`);
+    });
+  }
+  body += '</div>';
+
+  body += '</div>';
 
   document.getElementById('tsModalBody').innerHTML = body;
   document.getElementById('teamStatsModal').style.display = 'flex';
@@ -420,6 +526,20 @@ function renderTimeline(liveData, isHome, toModal) {
   html += `<button class="tl-btn${timelineFilter === 'scoring' ? ' active' : ''}" data-filter="scoring">Scoring</button>`;
   html += `<button class="tl-btn${timelineFilter === 'challenges' ? ' active' : ''}" data-filter="challenges">Challenges</button>`;
   html += '</div>';
+
+  // Challenge season summary when on Challenges tab
+  if (timelineFilter === 'challenges') {
+    const gameData = liveData._gameData;
+    const homeId = gameData.teams.home.id;
+    const awayId = gameData.teams.away.id;
+    const hStats = getTeamChallengeStats(homeId);
+    const aStats = getTeamChallengeStats(awayId);
+    html += '<div class="ch-season-summary">';
+    html += `<span><strong>${TEAMS[awayId]}</strong> ABS ${aStats.absWon}/${aStats.absUsed}</span>`;
+    html += `<span class="ch-sep">Season</span>`;
+    html += `<span><strong>${TEAMS[homeId]}</strong> ABS ${hStats.absWon}/${hStats.absUsed}</span>`;
+    html += '</div>';
+  }
 
   // Filter plays
   let plays;
@@ -901,7 +1021,7 @@ function renderAtBat(liveData, isHome) {
 document.getElementById('szClose').onclick = () => document.getElementById('szModal').style.display = 'none';
 document.getElementById('szModal').onclick = e => { if (e.target.id === 'szModal') e.target.style.display = 'none'; };
 document.querySelectorAll('nav button').forEach(btn => {
-  btn.onclick = () => { currentTab = btn.dataset.tab; update(); };
+  btn.onclick = () => { currentTab = btn.dataset.tab; userPickedTab = true; update(); };
 });
 
 document.getElementById('zoneBtn').onclick = showZoneModal;
@@ -1019,12 +1139,13 @@ async function update() {
 
       latestGameState = { my, opp, liveData, isHome, state };
 
-      // Auto-switch tab based on batting/pitching (#9)
-      if (state !== 'Final') {
+      // Auto-switch tab based on batting/pitching (#9) — only on first load
+      if (state !== 'Final' && !userPickedTab) {
         const currentPlay = liveData.plays?.currentPlay;
         if (currentPlay && !currentPlay.about.isComplete) {
           const myBatting = isHome ? currentPlay.about.halfInning === 'bottom' : currentPlay.about.halfInning === 'top';
           currentTab = myBatting ? 'scorecard' : 'box';
+          userPickedTab = true;
         }
       }
 
@@ -1132,6 +1253,7 @@ async function renderLeagueScores() {
         setTeamBtn(TEAM_ID);
         applyTeamColors(TEAM_ID);
         gamePk = null;
+        userPickedTab = false;
         update();
       };
     });
