@@ -321,7 +321,8 @@ function renderPitchingTable(my, liveData, isHome) {
       record: `${ss.wins || 0}-${ss.losses || 0}`,
       sIP: ss.inningsPitched || '0.0',
       sK: ss.strikeOuts || 0,
-      sBB: ss.baseOnBalls || 0
+      sBB: ss.baseOnBalls || 0,
+      sWHIP: ss.whip || '-.--'
     };
   }).filter(p => p.battersFaced > 0);
 
@@ -352,14 +353,14 @@ function renderPitchingTable(my, liveData, isHome) {
   }, { ip: '0.0', h: 0, r: 0, er: 0, bb: 0, k: 0, pc: 0, fps: 0, bf: 0 });
 
   let html = `<table id="pitchingTable" class="my-team"><thead>
-    <tr class="group-row"><th colspan="1"></th><th colspan="8">Game</th><th colspan="5" class="divider">Season</th></tr>
+    <tr class="group-row"><th colspan="1"></th><th colspan="8">Game</th><th colspan="6" class="divider">Season</th></tr>
     <tr>
     <th data-key="name">Pitcher</th><th data-key="inningsPitched">IP</th>
     <th data-key="hits">H</th><th data-key="runs">R</th><th data-key="earnedRuns">ER</th>
     <th data-key="baseOnBalls">BB</th><th data-key="strikeOuts">K</th>
     <th data-key="pitchesThrown">PC</th><th data-key="fps">FPS</th><th data-key="era" class="divider">ERA</th>
     <th data-key="record">W-L</th><th data-key="sIP">IP</th>
-    <th data-key="sK">K</th><th data-key="sBB">BB</th></tr></thead>`;
+    <th data-key="sK">K</th><th data-key="sBB">BB</th><th data-key="sWHIP">WHIP</th></tr></thead>`;
   const currentPlay = liveData.plays?.currentPlay;
   const activePitcherId = currentPlay?.matchup?.pitcher?.id;
 
@@ -370,13 +371,13 @@ function renderPitchingTable(my, liveData, isHome) {
     html += `<tr${trClass}><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.inningsPitched}</td><td>${p.hits}</td>
       <td>${p.runs}</td><td>${p.earnedRuns}</td><td>${p.baseOnBalls}</td>
       <td>${p.strikeOuts}</td><td class="${pcClass}">${p.pitchesThrown}</td><td>${totals.bf ? p.fps : ''}</td><td class="divider">${p.era}</td>
-      <td>${p.record}</td><td>${p.sIP}</td><td>${p.sK}</td><td>${p.sBB}</td></tr>`;
+      <td>${p.record}</td><td>${p.sIP}</td><td>${p.sK}</td><td>${p.sBB}</td><td>${p.sWHIP}</td></tr>`;
   });
   // Team totals row
   html += `<tr class="team-totals"><td><strong>Team</strong></td><td>${totals.ip}</td><td>${totals.h}</td>
     <td>${totals.r}</td><td>${totals.er}</td><td>${totals.bb}</td>
     <td>${totals.k}</td><td>${totals.pc}</td><td>${totals.fps}/${totals.bf}</td>
-    <td class="divider"></td><td></td><td></td><td></td><td></td></tr>`;
+    <td class="divider"></td><td></td><td></td><td></td><td></td><td></td></tr>`;
   document.getElementById('content').innerHTML += html + '</table>';
 
   document.querySelectorAll('#pitchingTable th[data-key]').forEach(th => {
