@@ -270,12 +270,14 @@ function renderBattingTable(my, liveData, isHome) {
     };
     if (th.dataset.key === sortState.key) th.textContent += sortState.asc? ' ▲' : ' ▼';
   });
-  document.querySelectorAll('#battingTable tr[data-pid]').forEach(tr => {
+
+  renderPitchingTable(my, liveData, isHome);
+
+  // Wire player click handlers AFTER both tables are in the DOM
+  document.querySelectorAll('#battingTable tr[data-pid], #pitchingTable tr[data-pid]').forEach(tr => {
     tr.style.cursor = 'pointer';
     tr.onclick = () => showPlayerModal(parseInt(tr.dataset.pid));
   });
-
-  renderPitchingTable(my, liveData, isHome);
 }
 
 function renderPitchingTable(my, liveData, isHome) {
@@ -392,10 +394,6 @@ function renderPitchingTable(my, liveData, isHome) {
       renderBattingTable(my, liveData, isHome);
     };
     if (th.dataset.key === pitchSortState.key) th.textContent += pitchSortState.asc? ' ▲' : ' ▼';
-  });
-  document.querySelectorAll('#pitchingTable tr[data-pid]').forEach(tr => {
-    tr.style.cursor = 'pointer';
-    tr.onclick = () => showPlayerModal(parseInt(tr.dataset.pid));
   });
 }
 
