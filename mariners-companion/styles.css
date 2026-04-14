@@ -146,6 +146,9 @@ th:hover { background:color-mix(in srgb, var(--primary), #fff 20%); }
 .ts-sub { font-size:13px; font-weight:600; color:#999; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
 .ch-season-summary { display:flex; justify-content:space-between; align-items:center; padding:8px 14px; background:#111; border-radius:8px; margin-bottom:10px; font-size:13px; color:#ccc; }
 .ch-sep { color:#666; font-size:11px; text-transform:uppercase; letter-spacing:1px; }
+.player-header { font-size:20px; font-weight:700; margin-bottom:16px; padding-bottom:10px; border-bottom:2px solid var(--accent); }
+.player-header .p-num { margin-right:6px; }
+.player-header .p-pos { font-size:14px; color:#999; }
 
 /* Standings modal */
 .standings-division { margin-bottom:16px; }

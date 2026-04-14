@@ -243,7 +243,7 @@ function renderBattingTable(my, liveData, isHome) {
     const isActive = p.id === activeBatterId;
     const classes = [isSub ? 'box-sub' : '', isActive ? 'active-player' : ''].filter(Boolean).join(' ');
     const trClass = classes ? ` class="${classes}"` : '';
-    html += `<tr${trClass}><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.atBats}</td>
+    html += `<tr${trClass} data-pid="${p.id}"><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.atBats}</td>
       <td>${p.runs}</td><td>${p.hits}</td><td>${p.rbi}</td>
       <td>${p.baseOnBalls}</td><td>${p.strikeOuts}</td><td class="divider">${p.avg}</td>
       <td>${p.obp}</td><td>${p.slg}</td><td>${p.ops}</td><td>${p.woba}</td>
@@ -269,6 +269,10 @@ function renderBattingTable(my, liveData, isHome) {
       renderBattingTable(my, liveData, isHome);
     };
     if (th.dataset.key === sortState.key) th.textContent += sortState.asc? ' ▲' : ' ▼';
+  });
+  document.querySelectorAll('#battingTable tr[data-pid]').forEach(tr => {
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => showPlayerModal(parseInt(tr.dataset.pid));
   });
 
   renderPitchingTable(my, liveData, isHome);
@@ -368,7 +372,7 @@ function renderPitchingTable(my, liveData, isHome) {
     const pcClass = p.pitchesThrown>100?'high-pc':'';
     const isActive = p.id === activePitcherId;
     const trClass = isActive ? ' class="active-player"' : '';
-    html += `<tr${trClass}><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.inningsPitched}</td><td>${p.hits}</td>
+    html += `<tr${trClass} data-pid="${p.id}"><td><span class="p-num">${p.num}</span>${p.name} <span class="p-pos">${p.pos}</span></td><td>${p.inningsPitched}</td><td>${p.hits}</td>
       <td>${p.runs}</td><td>${p.earnedRuns}</td><td>${p.baseOnBalls}</td>
       <td>${p.strikeOuts}</td><td class="${pcClass}">${p.pitchesThrown}</td><td>${totals.bf ? p.fps : ''}</td><td class="divider">${p.era}</td>
       <td>${p.record}</td><td>${p.sIP}</td><td>${p.sK}</td><td>${p.sBB}</td><td>${p.sWHIP}</td></tr>`;
@@ -388,6 +392,10 @@ function renderPitchingTable(my, liveData, isHome) {
       renderBattingTable(my, liveData, isHome);
     };
     if (th.dataset.key === pitchSortState.key) th.textContent += pitchSortState.asc? ' ▲' : ' ▼';
+  });
+  document.querySelectorAll('#pitchingTable tr[data-pid]').forEach(tr => {
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => showPlayerModal(parseInt(tr.dataset.pid));
   });
 }
 
@@ -488,6 +496,68 @@ function showPlaysModal() {
   const { liveData, isHome } = latestGameState;
   renderTimeline(liveData, isHome, true);
   document.getElementById('playsModal').style.display = 'flex';
+}
+
+function showPlayerModal(playerId) {
+  if (!latestGameState) return;
+  const { my, opp } = latestGameState;
+  // Find player in either team
+  const p = my.players['ID' + playerId] || opp.players['ID' + playerId];
+  if (!p) return;
+
+  const name = p.person.fullName;
+  const num = p.jerseyNumber || '';
+  const pos = p.position.abbreviation;
+  const isPitcher = p.stats.pitching && Object.keys(p.stats.pitching).length > 0 && (pos === 'P' || p.stats.pitching.inningsPitched);
+  const statLine = (label, val) => `<div class="ts-line"><span class="ts-label">${label}</span><span class="ts-val">${val}</span></div>`;
+
+  let body = `<div class="player-header"><span class="p-num">${num}</span> ${name} <span class="p-pos">${pos}</span></div>`;
+  body += '<div class="ts-cards">';
+
+  // Batting season stats
+  const b = p.seasonStats.batting;
+  if (b && (b.gamesPlayed > 0 || b.plateAppearances > 0)) {
+    const xbh = (b.doubles || 0) + (b.triples || 0) + (b.homeRuns || 0);
+    body += '<div class="ts-card"><div class="ts-card-title">Batting</div>';
+    body += statLine('G', b.gamesPlayed || 0);
+    body += statLine('AB', b.atBats || 0);
+    body += statLine('PA', b.plateAppearances || 0);
+    body += statLine('H', b.hits || 0);
+    body += statLine('XBH', xbh);
+    body += statLine('HR', b.homeRuns || 0);
+    body += statLine('BB', b.baseOnBalls || 0);
+    body += statLine('K', b.strikeOuts || 0);
+    body += statLine('AVG', b.avg || '.---');
+    body += statLine('OBP', b.obp || '.---');
+    body += statLine('SLG', b.slg || '.---');
+    body += statLine('OPS', b.ops || '.---');
+    body += statLine('wOBA', calcWoba(b));
+    body += '</div>';
+  }
+
+  // Pitching season stats
+  const pt = p.seasonStats.pitching;
+  if (isPitcher && pt && pt.gamesPlayed > 0) {
+    body += '<div class="ts-card"><div class="ts-card-title">Pitching</div>';
+    body += statLine('G', pt.gamesPlayed || 0);
+    body += statLine('GS', pt.gamesStarted || 0);
+    body += statLine('W-L', `${pt.wins || 0}-${pt.losses || 0}`);
+    body += statLine('ERA', pt.era || '-.--');
+    body += statLine('IP', pt.inningsPitched || '0.0');
+    body += statLine('K', pt.strikeOuts || 0);
+    body += statLine('BB', pt.baseOnBalls || 0);
+    body += statLine('WHIP', pt.whip || '-.--');
+    body += statLine('K/9', pt.strikeoutsPer9Inn || '-.--');
+    body += statLine('BB/9', pt.walksPer9Inn || '-.--');
+    body += statLine('H/9', pt.hitsPer9Inn || '-.--');
+    body += statLine('SV', pt.saves || 0);
+    body += statLine('HLD', pt.holds || 0);
+    body += '</div>';
+  }
+
+  body += '</div>';
+  document.getElementById('playerModalBody').innerHTML = body;
+  document.getElementById('playerModal').style.display = 'flex';
 }
 
 let timelineFilter = 'scoring';
@@ -1027,6 +1097,8 @@ document.getElementById('tsClose').onclick = () => document.getElementById('team
 document.getElementById('teamStatsModal').onclick = e => { if (e.target.id === 'teamStatsModal') e.target.style.display = 'none'; };
 document.getElementById('standingsClose').onclick = () => document.getElementById('standingsModal').style.display = 'none';
 document.getElementById('standingsModal').onclick = e => { if (e.target.id === 'standingsModal') e.target.style.display = 'none'; };
+document.getElementById('playerClose').onclick = () => document.getElementById('playerModal').style.display = 'none';
+document.getElementById('playerModal').onclick = e => { if (e.target.id === 'playerModal') e.target.style.display = 'none'; };
 
 // Full league standings popup on division bar click
 document.getElementById('divStandings').onclick = () => showStandingsModal();
