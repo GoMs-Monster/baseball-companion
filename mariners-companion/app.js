@@ -1116,13 +1116,15 @@ function showStandingsModal() {
       const divName = DIV_NAMES[div.division?.id] || div.division?.name || 'Division';
       html += `<div class="standings-division">`;
       html += `<div class="standings-division-title">${divName}</div>`;
-      html += `<table class="standings-table"><thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>STRK</th></tr></thead><tbody>`;
+      html += `<table class="standings-table"><thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>L10</th><th>STRK</th></tr></thead><tbody>`;
       const teams = div.teamRecords.sort((a, b) => parseInt(a.divisionRank) - parseInt(b.divisionRank));
       teams.forEach(tr => {
         const isMy = tr.team.id === TEAM_ID ? ' st-my-team' : '';
         const gb = tr.divisionGamesBack === '-' ? '—' : tr.divisionGamesBack;
+        const l10 = tr.records?.splitRecords?.find(r => r.type === 'lastTen');
+        const l10Str = l10 ? `${l10.wins}-${l10.losses}` : '';
         html += `<tr class="${isMy}"><td><div class="st-team-cell"><img src="${LOGO_URL(tr.team.id)}" class="st-logo" alt="">${tr.team.name}</div></td>`;
-        html += `<td>${tr.wins}</td><td>${tr.losses}</td><td>${tr.winningPercentage}</td><td>${gb}</td><td>${tr.streak?.streakCode || ''}</td></tr>`;
+        html += `<td>${tr.wins}</td><td>${tr.losses}</td><td>${tr.winningPercentage}</td><td>${gb}</td><td>${l10Str}</td><td>${tr.streak?.streakCode || ''}</td></tr>`;
       });
       html += '</tbody></table></div>';
     });
