@@ -755,7 +755,7 @@ function renderTimeline(liveData, isHome, toModal) {
     const inningNums = Object.keys(byInning).map(Number).sort((a, b) => b - a);
     inningNums.forEach(inn => {
       html += `<div class="tl-inning-header">Inning ${inn}</div>`;
-      byInning[inn].forEach(play => {
+      byInning[inn].slice().reverse().forEach(play => {
         const challengeType = getChallengeType(play);
         const absChallenges = getAbsChallenges(play);
         const battingTeam = play.about.halfInning === 'top' ? liveData.boxscore.teams.away : liveData.boxscore.teams.home;
