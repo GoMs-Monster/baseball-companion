@@ -1095,12 +1095,25 @@ function renderLiveInfo(liveData, isHome, state, inningLabel) {
   const strikes = play.count.strikes;
   const outs = play.count.outs;
 
+  // Base runners diamond
+  const offense = liveData.linescore.offense || {};
+  const b1 = !!offense.first;
+  const b2 = !!offense.second;
+  const b3 = !!offense.third;
+  const bc = (on) => on ? 'var(--accent)' : '#444';
+  const baseDiamond = `<svg class="li-bases" width="28" height="28" viewBox="0 0 28 28">`
+    + `<rect x="15.5" y="8" width="8" height="8" rx="1" transform="rotate(45 19.5 12)" fill="${bc(b1)}" stroke="${bc(b1)}"/>`
+    + `<rect x="8.5" y="1" width="8" height="8" rx="1" transform="rotate(45 12.5 5)" fill="${bc(b2)}" stroke="${bc(b2)}"/>`
+    + `<rect x="1.5" y="8" width="8" height="8" rx="1" transform="rotate(45 5.5 12)" fill="${bc(b3)}" stroke="${bc(b3)}"/>`
+    + `</svg>`;
+
   const outDots = '●'.repeat(outs) + '○'.repeat(Math.max(0, 3 - outs));
   el.innerHTML = `
     <span class="mc-player">${playerName}</span>
     <span class="mc-sep">│</span>
     <span class="mc-count">${balls}-${strikes}</span>
     <span class="mc-sep">│</span>
+    ${baseDiamond}
     <span class="mc-outs">${outDots}</span>
     <span class="mc-sep">│</span>
     <span class="mc-inning">${inningLabel}</span>
