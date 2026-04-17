@@ -15,18 +15,24 @@
 - **Scoring Notation** — Proper baseball notation (1B, F8, 6-4-3, etc.) with fielder position numbers derived from play credits
 - **Base Diamonds** — Visual diamond indicators showing the furthest base each runner reached
 - **Pitch Count Per At-Bat** — Ball-strike count displayed in each cell
+- **Live Count on Scorecard** — Current ball-strike count shown for the active at-bat in the scorecard cell
 - **Color-Coded Results** — Hits (green), on-base (blue), outs (red)
+- **Active Batter Highlight** — Visually highlight the active batter row in the scorecard
 - **Substitution Tracking** — Pinch hitters and defensive replacements shown as sub-rows with dashed borders
 - **Runs Summary Row** — Runs per inning totals at the bottom
+- **At-Bat Detail Popup** — Click any scorecard cell to see full at-bat details and baserunning journey through the inning
 
 ## Box Score Tab
 - **Batting Table** — Game stats (AB, R, H, RBI, BB, K) alongside season stats (AVG, OBP, SLG, OPS, wOBA)
+- **Strikeout & Walk Season Stats** — K and BB season totals in the batting and pitching tables
 - **Sortable Columns** — Click any column header to sort ascending/descending
 - **Calculated wOBA** — Weighted on-base average computed from season stats using standard linear weights
 - **Team Totals Row** — Aggregated game batting totals
 - **Pitching Table** — Game pitching stats (IP, H, R, ER, BB, K, HR, PC) with season ERA, WHIP, and K/9
 - **First-Pitch Strike %** — Calculated per pitcher from actual pitch-by-pitch data
 - **High Pitch Count Highlight** — Pitch counts above a threshold shown in red
+- **Pitcher Order** — Pitchers sorted in the pitching table by order of appearance
+- **Active Pitcher Highlight** — Visually highlight the active pitcher row in the box score
 
 ## Strike Zone Modal
 - **Visual Strike Zone** — SVG plot of all pitches in the current at-bat mapped to zone coordinates
@@ -40,6 +46,7 @@
 - **Team-Colored Plays** — Your team's plays use primary/accent styling; opponent plays are muted grey
 - **Manager Challenge Highlights** — Plays with manager reviews (tag plays, plays at bases) shown with amber/gold styling and a "Challenge · Overturned/Confirmed" badge
 - **ABS Challenge Highlights** — Pitch-result challenges (by batters or catchers) shown with purple styling and an "ABS · Overturned/Confirmed" badge, including the challenger's name and pitch number
+- **Challenges Tab** — Dedicated filter tab to show only challenge plays (both manager and ABS)
 - **RBI Callouts** — RBI details shown on plays that drive in runs
 
 ## Team Stats Modal
@@ -47,6 +54,7 @@
 - **RISP Performance** — Hits-for-at-bats with runners in scoring position
 - **Situational Stats** — LOB, SF, SAC, GIDP, HBP with player names
 - **Baserunning Stats** — Stolen bases, caught stealing, pickoffs with player names and season totals
+- **Season Challenge Stats** — Season challenge database with nightly GitHub Actions scraper, challenge stats card, and season summary in Challenges tab
 
 ## Pre-Game Preview
 - **Matchup Header** — Team names with win-loss records
@@ -63,24 +71,17 @@
 - **Division Logos** — All teams in the selected team's division shown with logos
 - **Win-Loss Records** — Current records displayed under each team
 - **Highlight Selected Team** — Active team's logo is enlarged with a glow effect
+- **Full League Standings Popup** — Expand the division standings bar into a full-league standings modal when tapped
 
 ## General
 - **Auto-Refresh** — Game data polls every 20 seconds during live games
 - **Scroll Preservation** — Horizontal and vertical scroll positions maintained across refreshes
+- **Auto Tab Switching** — Default to the Card tab when the selected team is batting; switch to Box when they are pitching
+- **Location-Based Game Times** — Game times converted to the user's local timezone
 - **Responsive Design** — Mobile-friendly layout with adjusted sizing for small screens
 - **Electron/Web Ready** — Runs as a standalone app via `launch.bat` or in any browser
 
 ---
 
 ## Future / Wishlist
-1. ~~**Challenges Tab in Plays Popup**~~ ✅ — Dedicated filter tab in the Plays modal to show only challenge plays (both manager and ABS)
-2. ~~**Fix Side Scrolling on Mobile**~~ ✅ — Preserve horizontal scroll position on the scorecard across refreshes
-3. ~~**Strikeout & Walk Season Stats**~~ ✅ — Add K and BB season totals to the batting and pitching tables
-4. ~~**Season Challenge Stats**~~ ✅ — Season challenge database with nightly GitHub Actions scraper, challenge stats card in Team Stats modal, and season summary in Challenges tab
-5. **Android Scorebug Widget** — Standalone Android home screen widget displaying the live score bug
-6. ~~**Pitcher Order in Box Score**~~ ✅ — Sort pitchers in the pitching table by order of appearance
-7. ~~**Highlight Current Battery/Pitcher**~~ ✅ — Visually highlight the active batter or pitcher row in the box score and scorecard
-8. ~~**Live Count on Scorecard**~~ ✅ — Show the current ball-strike count for the active at-bat in the scorecard cell
-9. ~~**Auto Tab Switching**~~ ✅ — Default to the Card tab when the selected team is batting; switch to Box when they are pitching
-10. ~~**Location-Based Game Times**~~ ✅ — Convert game times to the user's local timezone
-11. ~~**Full League Standings Popup**~~ ✅ — Expand the division standings bar into a full-league standings modal when tapped
+1. **Android Scorebug Widget** — Standalone Android home screen widget displaying the live score bug

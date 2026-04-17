@@ -525,6 +525,8 @@ function showPlayerModal(playerId) {
     body += statLine('HR', b.homeRuns || 0);
     body += statLine('BB', b.baseOnBalls || 0);
     body += statLine('K', b.strikeOuts || 0);
+    body += statLine('SB', b.stolenBases || 0);
+    body += statLine('CS', b.caughtStealing || 0);
     body += statLine('AVG', b.avg || '.---');
     body += statLine('OBP', b.obp || '.---');
     body += statLine('SLG', b.slg || '.---');
@@ -550,6 +552,133 @@ function showPlayerModal(playerId) {
     body += statLine('H/9', pt.hitsPer9Inn || '-.--');
     body += statLine('SV', pt.saves || 0);
     body += statLine('HLD', pt.holds || 0);
+    body += '</div>';
+  }
+
+  body += '</div>';
+  document.getElementById('playerModalBody').innerHTML = body;
+  document.getElementById('playerModal').style.display = 'flex';
+}
+
+function showAtBatDetail(atBatIndex) {
+  if (!latestGameState) return;
+  const { liveData, isHome, my } = latestGameState;
+  const allPlays = liveData.plays.allPlays || [];
+  const myHalf = isHome ? 'bottom' : 'top';
+
+  const abPlay = allPlays.find(p => p.about.atBatIndex === atBatIndex);
+  if (!abPlay) return;
+
+  const batterId = abPlay.matchup.batter.id;
+  const batterName = abPlay.matchup.batter.fullName;
+  const inning = abPlay.about.inning;
+  const playerInfo = my.players['ID' + batterId];
+  const num = playerInfo?.jerseyNumber || '';
+  const pos = playerInfo?.position?.abbreviation || '';
+
+  // Build at-bat detail card
+  const pitcherName = abPlay.matchup.pitcher.fullName;
+  const count = abPlay.count ? `${abPlay.count.balls}-${abPlay.count.strikes}` : '';
+  const result = abPlay.result.event || '';
+  const desc = abPlay.result.description || '';
+
+  const eventLine = (icon, text) => `<div class="ab-event"><span class="ab-icon">${icon}</span><span class="ab-text">${text}</span></div>`;
+
+  let body = `<div class="player-header"><span class="p-num">${num}</span> ${batterName} <span class="p-pos">${pos}</span></div>`;
+  body += '<div class="ts-cards">';
+
+  // At-Bat card
+  body += '<div class="ts-card"><div class="ts-card-title">At Bat — Inning ' + inning + '</div>';
+  body += eventLine('⚾', `vs ${pitcherName}`);
+  body += eventLine('📊', `Count: ${count}`);
+  const resultCls = isHit(result) ? 'sc-hit' : isOnBase(result) ? 'sc-ob' : 'sc-out';
+  body += eventLine('📋', `<span class="${resultCls}">${result}</span>`);
+  body += eventLine('📝', desc);
+  body += '</div>';
+
+  // Trace runner journey through the rest of the half-inning
+  // Handle pinch runners by tracking current runner ID
+  let trackId = batterId;
+  const events = [];
+
+  // Get all plays in this half-inning after the at-bat
+  const laterPlays = allPlays.filter(p =>
+    p.about.halfInning === myHalf &&
+    p.about.inning === inning &&
+    p.about.isComplete &&
+    p.about.atBatIndex > atBatIndex
+  );
+
+  for (const play of laterPlays) {
+    if (!play.runners) continue;
+    for (const r of play.runners) {
+      const rId = r.details?.runner?.id;
+      if (rId !== trackId) continue;
+
+      const start = r.movement?.originBase || '';
+      const end = r.movement?.end || '';
+      const rEvent = r.details?.event || '';
+      const rIsOut = r.movement?.isOut || r.details?.isOut;
+      const onBatter = play.matchup?.batter?.fullName || '';
+      const playCount = play.count ? `${play.count.balls}-${play.count.strikes}` : '';
+      const playDesc = play.result?.description || '';
+
+      let label = '';
+      if (rEvent) {
+        label = rEvent;
+      } else if (end === 'score') {
+        label = 'Scored';
+      } else if (rIsOut) {
+        label = 'Out';
+      } else if (end && start && end !== start) {
+        label = `Advanced to ${end}`;
+      }
+
+      if (!label) continue;
+
+      let detail = '';
+      if (onBatter) detail += `During ${onBatter}'s AB`;
+      if (playCount) detail += ` (${playCount})`;
+
+      const icon = end === 'score' ? '🏠' : rIsOut ? '❌' : rEvent.includes('Stolen') ? '💨' : '➡️';
+      events.push({ icon, label, detail, desc: playDesc, isOut: rIsOut, scored: end === 'score' });
+
+      // Journey ends on score or out
+      if (end === 'score' || rIsOut) break;
+    }
+
+    // Check for pinch runner replacement: if a runner replaces our tracked runner
+    // the MLB API shows this as our runner going out and new runner at the same base
+    // We detect by looking for offensive substitution plays
+    if (play.result?.eventType === 'offensive_substitution') {
+      for (const r of play.runners) {
+        if (r.details?.runner?.id !== trackId) {
+          const end = r.movement?.end;
+          // New runner appeared at a base — this is our replacement
+          if (end && end !== 'score' && !r.movement?.isOut) {
+            trackId = r.details.runner.id;
+            events.push({ icon: '🔄', label: `Pinch runner: ${r.details.runner.fullName}`, detail: '', desc: '', isOut: false, scored: false });
+            break;
+          }
+        }
+      }
+    }
+
+    // Stop if journey ended
+    const last = events[events.length - 1];
+    if (last && (last.isOut || last.scored)) break;
+  }
+
+  if (events.length > 0) {
+    body += '<div class="ts-card"><div class="ts-card-title">On the Bases</div>';
+    events.forEach(e => {
+      let html = `<div class="ab-event"><span class="ab-icon">${e.icon}</span><div class="ab-event-body">`;
+      html += `<span class="ab-text">${e.label}</span>`;
+      if (e.detail) html += `<span class="ab-detail">${e.detail}</span>`;
+      if (e.desc) html += `<span class="ab-desc">${e.desc}</span>`;
+      html += '</div></div>';
+      body += html;
+    });
     body += '</div>';
   }
 
@@ -909,7 +1038,7 @@ function renderScorecard(liveData, isHome) {
             const outNum = outsOnRunner[fKey] || 0;
             const diamond = basesDiamond(furthest[fKey] || 0, outNum);
             const cnt = playCount(p);
-            return `<div class="sc-ab"><span class="sc-count">${cnt}</span><span class="${cls}" title="${ev}">${ab}</span>${diamond}</div>`;
+            return `<div class="sc-ab sc-clickable" onclick="showAtBatDetail(${p.about.atBatIndex})"><span class="sc-count">${cnt}</span><span class="${cls}" title="${ev}">${ab}</span>${diamond}</div>`;
           }).join('');
           html += `<td class="sc-cell">${results}</td>`;
         }
