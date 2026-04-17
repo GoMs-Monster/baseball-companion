@@ -611,10 +611,21 @@ function showAtBatDetail(atBatIndex) {
 
   for (const play of laterPlays) {
     if (!play.runners) continue;
+
+    // A single play can have multiple runner entries for the same player
+    // (e.g., 1B→2B and 2B→3B). Collect only the most advanced movement.
+    const baseOrder = { '1B': 1, '2B': 2, '3B': 3, 'score': 4 };
+    let best = null;
     for (const r of play.runners) {
       const rId = r.details?.runner?.id;
       if (rId !== trackId) continue;
+      const end = r.movement?.end || '';
+      const val = baseOrder[end] || 0;
+      if (!best || val > (baseOrder[best.movement?.end] || 0)) best = r;
+    }
 
+    if (best) {
+      const r = best;
       const start = r.movement?.originBase || '';
       const end = r.movement?.end || '';
       const rEvent = r.details?.event || '';
@@ -634,17 +645,17 @@ function showAtBatDetail(atBatIndex) {
         label = `Advanced to ${end}`;
       }
 
-      if (!label) continue;
+      if (label) {
+        let detail = '';
+        if (onBatter) detail += `During ${onBatter}'s AB`;
+        if (playCount) detail += ` (${playCount})`;
 
-      let detail = '';
-      if (onBatter) detail += `During ${onBatter}'s AB`;
-      if (playCount) detail += ` (${playCount})`;
-
-      const icon = end === 'score' ? '●' : rIsOut ? '✕' : rEvent.includes('Stolen') ? '→' : '→';
-      events.push({ icon, label, detail, desc: playDesc, isOut: rIsOut, scored: end === 'score' });
+        const icon = end === 'score' ? '●' : rIsOut ? '✕' : rEvent.includes('Stolen') ? '→' : '→';
+        events.push({ icon, label, detail, desc: playDesc, isOut: rIsOut, scored: end === 'score' });
+      }
 
       // Journey ends on score or out
-      if (end === 'score' || rIsOut) break;
+      if (end === 'score' || rIsOut) { break; }
     }
 
     // Check for pinch runner replacement: if a runner replaces our tracked runner
