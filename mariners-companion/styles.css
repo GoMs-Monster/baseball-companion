@@ -172,12 +172,12 @@ th:hover { background:color-mix(in srgb, var(--primary), #fff 20%); }
 .probable-pitchers h3 { color:var(--accent); font-size:14px; margin-bottom:10px; }
 .pp { padding:8px 12px; border-radius:6px; margin:6px 0; font-size:15px; }
 .venue-info { margin-top:24px; color:#666; font-size:13px; }
-.scorecard { overflow-x:auto; padding:4px; background:rgba(0,0,0,.75); border-radius:8px; }
+.scorecard { overflow-x:auto; padding:4px; padding-left:0; background:rgba(0,0,0,.75); border-radius:8px; }
 .sc-table { width:100%; border-collapse:separate; border-spacing:0; font-size:14px; margin:0; }
 .sc-table th, .sc-table td { border:1px solid #333; padding:5px 5px; text-align:center; vertical-align:middle; }
 .sc-table thead th { background:var(--primary); color:#eee; font-size:12px; font-weight:600; }
-.sc-table thead th:first-child { position:sticky; left:0; z-index:3; }
-.sc-name { text-align:left !important; white-space:nowrap; width:110px; min-width:110px; font-size:11px; color:#fff; background:#0a0a0a; position:sticky; left:0; z-index:2; }
+.sc-table thead th:first-child { position:sticky; left:0; z-index:3; padding-left:9px; }
+.sc-name { text-align:left !important; white-space:nowrap; width:110px; min-width:110px; font-size:11px; color:#fff; background:#0a0a0a; position:sticky; left:0; z-index:2; padding-left:9px !important; }
 .sc-num { display:inline-block; min-width:20px; margin-right:5px; font-size:10px; color:#999; text-align:right; }
 .sc-pos-tag { font-size:10px; color:#888; margin-left:4px; }
 .sc-inn { min-width:32px; }
