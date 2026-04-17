@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ScoreBug" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#0a0a0a</item>
+        <item name="android:navigationBarColor">#0a0a0a</item>
+        <item name="android:windowBackground">#111111</item>
+    </style>
+
+    <!-- All 30 MLB team primary + accent colours -->
+    <color name="team_108_primary">#A71930</color> <!-- ARI -->
+    <color name="team_108_accent">#E3D4AD</color>
+    <color name="team_144_primary">#CE1141</color> <!-- ATL -->
+    <color name="team_144_accent">#13274F</color>
+    <color name="team_110_primary">#DF4601</color> <!-- BAL -->
+    <color name="team_110_accent">#000000</color>
+    <color name="team_111_primary">#BD3039</color> <!-- BOS -->
+    <color name="team_111_accent">#0C2340</color>
+    <color name="team_112_primary">#0E3386</color> <!-- CHC -->
+    <color name="team_112_accent">#CC3433</color>
+    <color name="team_145_primary">#27251F</color> <!-- CWS -->
+    <color name="team_145_accent">#C4CED4</color>
+    <color name="team_113_primary">#C6011F</color> <!-- CIN -->
+    <color name="team_113_accent">#000000</color>
+    <color name="team_114_primary">#00385D</color> <!-- CLE -->
+    <color name="team_114_accent">#E50022</color>
+    <color name="team_115_primary">#333366</color> <!-- COL -->
+    <color name="team_115_accent">#C4CED4</color>
+    <color name="team_116_primary">#0C2340</color> <!-- DET -->
+    <color name="team_116_accent">#FA4616</color>
+    <color name="team_117_primary">#002D62</color> <!-- HOU -->
+    <color name="team_117_accent">#EB6E1F</color>
+    <color name="team_118_primary">#004687</color> <!-- KC -->
+    <color name="team_118_accent">#BD9B60</color>
+    <color name="team_108_2_primary">#BA0021</color> <!-- LAA -->
+    <color name="team_108_2_accent">#003263</color>
+    <color name="team_119_primary">#005A9C</color> <!-- LAD -->
+    <color name="team_119_accent">#EF3E42</color>
+    <color name="team_158_primary">#00A3E0</color> <!-- MIA -->
+    <color name="team_158_accent">#EF3340</color>
+    <color name="team_160_primary">#12284B</color> <!-- MIL -->
+    <color name="team_160_accent">#FFC52F</color>
+    <color name="team_142_primary">#002B5C</color> <!-- MIN -->
+    <color name="team_142_accent">#D31145</color>
+    <color name="team_121_primary">#002D72</color> <!-- NYM -->
+    <color name="team_121_accent">#FF5910</color>
+    <color name="team_147_primary">#003087</color> <!-- NYY -->
+    <color name="team_147_accent">#E4002C</color>
+    <color name="team_133_primary">#003831</color> <!-- OAK -->
+    <color name="team_133_accent">#EFB21E</color>
+    <color name="team_143_primary">#E81828</color> <!-- PHI -->
+    <color name="team_143_accent">#002D72</color>
+    <color name="team_134_primary">#27251F</color> <!-- PIT -->
+    <color name="team_134_accent">#FDB827</color>
+    <color name="team_135_primary">#002D62</color> <!-- SD -->
+    <color name="team_135_accent">#A2AAAD</color>
+    <color name="team_137_primary">#FD5A1E</color> <!-- SF -->
+    <color name="team_137_accent">#27251F</color>
+    <color name="team_136_primary">#005C5C</color> <!-- SEA -->
+    <color name="team_136_accent">#00A3E0</color>
+    <color name="team_138_primary">#C41E3A</color> <!-- STL -->
+    <color name="team_138_accent">#0C2340</color>
+    <color name="team_139_primary">#092C5C</color> <!-- TB -->
+    <color name="team_139_accent">#8FBCE6</color>
+    <color name="team_140_primary">#003278</color> <!-- TEX -->
+    <color name="team_140_accent">#C0111F</color>
+    <color name="team_141_primary">#134A8E</color> <!-- TOR -->
+    <color name="team_141_accent">#1D2D5C</color>
+    <color name="team_120_primary">#AB0003</color> <!-- WSH -->
+    <color name="team_120_accent">#14225A</color>
+</resources>
