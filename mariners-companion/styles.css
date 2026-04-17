@@ -177,7 +177,7 @@ th:hover { background:color-mix(in srgb, var(--primary), #fff 20%); }
 .sc-table th, .sc-table td { border:1px solid #333; padding:5px 5px; text-align:center; vertical-align:middle; }
 .sc-table thead th { background:var(--primary); color:#eee; font-size:12px; font-weight:600; }
 .sc-table thead th:first-child { position:sticky; left:0; z-index:3; }
-.sc-name { text-align:left !important; white-space:nowrap; width:110px; min-width:110px; font-size:11px; color:#fff; background:rgba(0,0,0,.9); position:sticky; left:0; z-index:2; }
+.sc-name { text-align:left !important; white-space:nowrap; width:110px; min-width:110px; font-size:11px; color:#fff; background:#0a0a0a; position:sticky; left:0; z-index:2; }
 .sc-num { display:inline-block; min-width:20px; margin-right:5px; font-size:10px; color:#999; text-align:right; }
 .sc-pos-tag { font-size:10px; color:#888; margin-left:4px; }
 .sc-inn { min-width:32px; }
