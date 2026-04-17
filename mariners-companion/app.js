@@ -582,18 +582,18 @@ function showAtBatDetail(atBatIndex) {
   const result = abPlay.result.event || '';
   const desc = abPlay.result.description || '';
 
-  const eventLine = (icon, text) => `<div class="ab-event"><span class="ab-icon">${icon}</span><span class="ab-text">${text}</span></div>`;
+  const eventLine = (icon, text) => `<div class="ab-event">${icon ? `<span class="ab-icon">${icon}</span>` : ''}<span class="ab-text">${text}</span></div>`;
 
   let body = `<div class="player-header"><span class="p-num">${num}</span> ${batterName} <span class="p-pos">${pos}</span></div>`;
   body += '<div class="ts-cards">';
 
   // At-Bat card
   body += '<div class="ts-card"><div class="ts-card-title">At Bat — Inning ' + inning + '</div>';
-  body += eventLine('⚾', `vs ${pitcherName}`);
-  body += eventLine('📊', `Count: ${count}`);
+  body += eventLine('', `vs ${pitcherName}`);
+  body += eventLine('', `Count: ${count}`);
   const resultCls = isHit(result) ? 'sc-hit' : isOnBase(result) ? 'sc-ob' : 'sc-out';
-  body += eventLine('📋', `<span class="${resultCls}">${result}</span>`);
-  body += eventLine('📝', desc);
+  body += eventLine('', `<span class="${resultCls}">${result}</span>`);
+  body += eventLine('', desc);
   body += '</div>';
 
   // Trace runner journey through the rest of the half-inning
@@ -640,7 +640,7 @@ function showAtBatDetail(atBatIndex) {
       if (onBatter) detail += `During ${onBatter}'s AB`;
       if (playCount) detail += ` (${playCount})`;
 
-      const icon = end === 'score' ? '🏠' : rIsOut ? '❌' : rEvent.includes('Stolen') ? '💨' : '➡️';
+      const icon = end === 'score' ? '●' : rIsOut ? '✕' : rEvent.includes('Stolen') ? '→' : '→';
       events.push({ icon, label, detail, desc: playDesc, isOut: rIsOut, scored: end === 'score' });
 
       // Journey ends on score or out
@@ -657,7 +657,7 @@ function showAtBatDetail(atBatIndex) {
           // New runner appeared at a base — this is our replacement
           if (end && end !== 'score' && !r.movement?.isOut) {
             trackId = r.details.runner.id;
-            events.push({ icon: '🔄', label: `Pinch runner: ${r.details.runner.fullName}`, detail: '', desc: '', isOut: false, scored: false });
+            events.push({ icon: '↔', label: `Pinch runner: ${r.details.runner.fullName}`, detail: '', desc: '', isOut: false, scored: false });
             break;
           }
         }
