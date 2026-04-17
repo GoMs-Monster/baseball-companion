@@ -1251,6 +1251,15 @@ document.getElementById('standingsModal').onclick = e => { if (e.target.id === '
 document.getElementById('playerClose').onclick = () => document.getElementById('playerModal').style.display = 'none';
 document.getElementById('playerModal').onclick = e => { if (e.target.id === 'playerModal') e.target.style.display = 'none'; };
 
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const modals = ['playerModal','standingsModal','teamStatsModal','playsModal','zoneModal','szModal'];
+  for (const id of modals) {
+    const el = document.getElementById(id);
+    if (el && el.style.display === 'flex') { el.style.display = 'none'; return; }
+  }
+});
+
 // Full league standings popup on division bar click
 document.getElementById('divStandings').onclick = () => showStandingsModal();
 
