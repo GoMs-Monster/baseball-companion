@@ -226,9 +226,9 @@ th:hover { background:color-mix(in srgb, var(--primary), #fff 20%); }
   .sc-name { width:80px; min-width:80px; font-size:9px; }
   .sc-cell { min-width:42px; width:42px; height:42px; font-size:11px; }
   .sz-modal-content { width:95%; padding:14px; }
-  .zone-plate-wrapper { flex-direction:column; }
-  .batter-indicator { width:60px; }
-  .batter-silhouette { width:50px; height:160px; }
+  .zone-plate-wrapper { gap:2px; }
+  .batter-indicator { width:36px; }
+  .batter-silhouette { width:32px; height:120px; }
   .ts-cards { flex-direction:column; }
   .ts-card { min-width:unset; }
   .preview { padding:16px; }
