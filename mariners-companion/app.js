@@ -17,8 +17,8 @@ function applyTeamColors(id) {
   const [primary, accent] = TEAM_COLORS[id] || TEAM_COLORS[136];
   document.documentElement.style.setProperty('--primary', primary);
   document.documentElement.style.setProperty('--accent', accent);
-  document.body.style.background = `linear-gradient(180deg, ${primary}88 0%, #0a0a0a 90%)`;
-  document.body.style.backgroundAttachment = 'fixed';
+  document.body.style.background = '#0a0a0a';
+  document.body.style.backgroundAttachment = '';
 }
 let gamePk = null;
 let currentTab = 'scorecard';
@@ -152,6 +152,14 @@ document.getElementById('scoreText').addEventListener('click', e => {
   gamePk = null;
   userPickedTab = false;
   update();
+});
+
+document.getElementById('content').addEventListener('click', e => {
+  const ppLink = e.target.closest('.pp-link');
+  if (!ppLink) return;
+  const pid = parseInt(ppLink.dataset.pid);
+  const name = ppLink.dataset.name;
+  if (pid && name) showPitcherPreviewModal(pid, name);
 });
 
 async function getTodayGamePk() {
@@ -494,6 +502,66 @@ function showPlaysModal() {
   const { liveData, isHome } = latestGameState;
   renderTimeline(liveData, isHome, true);
   document.getElementById('playsModal').style.display = 'flex';
+}
+
+async function showPitcherPreviewModal(pitcherId, pitcherName) {
+  const statLine = (label, val) => `<div class="ts-line"><span class="ts-label">${label}</span><span class="ts-val">${val}</span></div>`;
+  let body = `<div class="player-header">${pitcherName} <span class="p-pos">P</span></div>`;
+  body += '<div class="ts-cards"><div class="ts-card"><div class="ts-card-title">Loading...</div></div></div>';
+  document.getElementById('playerModalBody').innerHTML = body;
+  document.getElementById('playerModal').style.display = 'flex';
+
+  try {
+    const res = await fetch(`https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching,batting],type=season)`);
+    const data = await res.json();
+    const person = data.people?.[0];
+    if (!person) return;
+
+    body = `<div class="player-header">#${person.primaryNumber || ''} ${person.fullName} <span class="p-pos">${person.primaryPosition?.abbreviation || 'P'}</span></div>`;
+    body += '<div class="ts-cards">';
+
+    const pitchStats = person.stats?.find(s => s.group?.displayName === 'pitching' && s.type?.displayName === 'season');
+    const pt = pitchStats?.splits?.[0]?.stat;
+    if (pt) {
+      body += '<div class="ts-card"><div class="ts-card-title">Pitching</div>';
+      body += statLine('G', pt.gamesPlayed || 0);
+      body += statLine('GS', pt.gamesStarted || 0);
+      body += statLine('W-L', `${pt.wins || 0}-${pt.losses || 0}`);
+      body += statLine('ERA', pt.era || '-.--');
+      body += statLine('IP', pt.inningsPitched || '0.0');
+      body += statLine('K', pt.strikeOuts || 0);
+      body += statLine('BB', pt.baseOnBalls || 0);
+      body += statLine('WHIP', pt.whip || '-.--');
+      body += statLine('K/9', pt.strikeoutsPer9Inn || '-.--');
+      body += statLine('BB/9', pt.walksPer9Inn || '-.--');
+      body += statLine('H/9', pt.hitsPer9Inn || '-.--');
+      body += statLine('SV', pt.saves || 0);
+      body += statLine('HLD', pt.holds || 0);
+      body += '</div>';
+    }
+
+    const batStats = person.stats?.find(s => s.group?.displayName === 'hitting' && s.type?.displayName === 'season');
+    const b = batStats?.splits?.[0]?.stat;
+    if (b && (b.gamesPlayed > 0 || b.plateAppearances > 0)) {
+      body += '<div class="ts-card"><div class="ts-card-title">Batting</div>';
+      body += statLine('G', b.gamesPlayed || 0);
+      body += statLine('AB', b.atBats || 0);
+      body += statLine('H', b.hits || 0);
+      body += statLine('HR', b.homeRuns || 0);
+      body += statLine('AVG', b.avg || '.---');
+      body += statLine('OPS', b.ops || '.---');
+      body += '</div>';
+    }
+
+    if (!pt && !b) {
+      body += '<div class="ts-card"><div class="ts-card-title">No season stats available</div></div>';
+    }
+
+    body += '</div>';
+    document.getElementById('playerModalBody').innerHTML = body;
+  } catch {
+    document.getElementById('playerModalBody').innerHTML = body.replace('Loading...', 'Failed to load stats');
+  }
 }
 
 function showPlayerModal(playerId) {
@@ -1307,21 +1375,27 @@ function renderPreview(gameData, isHome) {
   const oppTeam = gameData.teams[isHome ? 'away' : 'home'];
   const pp = gameData.probablePitchers || {};
 
+  const vsLabel = isHome ? 'vs' : 'at';
   let html = '<div class="preview">';
-  html += `<div class="matchup-header">${myTeam.name} <span class="vs">vs</span> ${oppTeam.name}</div>`;
-  html += `<div class="records">(${myTeam.record.wins}-${myTeam.record.losses}) vs (${oppTeam.record.wins}-${oppTeam.record.losses})</div>`;
+  html += `<div class="matchup-header">${myTeam.name} <span class="vs">${vsLabel}</span> ${oppTeam.name}</div>`;
+  html += `<div class="records">(${myTeam.record.wins}-${myTeam.record.losses}) ${vsLabel} (${oppTeam.record.wins}-${oppTeam.record.losses})</div>`;
 
   if (pp.away || pp.home) {
     const myPP = pp[isHome ? 'home' : 'away'];
     const oppPP = pp[isHome ? 'away' : 'home'];
     html += '<div class="probable-pitchers">';
     html += '<h3>Probable Pitchers</h3>';
-    if (myPP) html += `<div class="pp my-play">${myPP.fullName}</div>`;
-    if (oppPP) html += `<div class="pp opp-play">${oppPP.fullName}</div>`;
+    if (myPP) html += `<div class="pp my-play pp-link" data-pid="${myPP.id}" data-name="${myPP.fullName}">${myPP.fullName}</div>`;
+    if (oppPP) html += `<div class="pp opp-play pp-link" data-pid="${oppPP.id}" data-name="${oppPP.fullName}">${oppPP.fullName}</div>`;
     html += '</div>';
   }
 
-  html += `<div class="venue-info">${gameData.venue?.name || ''}</div>`;
+  const venueName = gameData.venue?.name || '';
+  const venueCity = gameData.venue?.location?.city || '';
+  const venueState = gameData.venue?.location?.stateAbbrev || gameData.venue?.location?.state || '';
+  const venueLocation = [venueCity, venueState].filter(Boolean).join(', ');
+  html += `<div class="venue-name">${venueName}</div>`;
+  if (venueLocation) html += `<div class="venue-location">${venueLocation}</div>`;
   html += '</div>';
   document.getElementById('content').innerHTML = html;
 }
@@ -1349,7 +1423,7 @@ async function update() {
       const status = gameData.status.detailedState;
       const oppId = opp.team.id;
       document.getElementById('scoreText').innerHTML = `
-        ${TEAMS[TEAM_ID]} vs <span class="opp-link" data-team="${oppId}">${opp.team.name}</span>
+        ${TEAMS[TEAM_ID]} ${isHome ? 'vs' : 'at'} <span class="opp-link" data-team="${oppId}">${opp.team.name}</span>
         <span style="float:right">${status} — ${localTime}</span>`;
       document.getElementById('liveInfo').innerHTML = '';
       renderPreview(gameData, isHome);
