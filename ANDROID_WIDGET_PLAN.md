@@ -171,7 +171,7 @@ When the user adds the widget to their home screen, Android launches a **configu
 
 ### Click Behavior
 - **Tap anywhere on the widget** → opens the Baseball Companion web app in the default browser
-- URL format: `https://goms-monster.github.io/baseball-companion/mariners-companion/`
+- URL format: `https://baseball-companion.com/`
 - The web app's `localStorage` team selection is independent of the widget's team selection
 
 ### Deep Link Strategy
@@ -182,7 +182,7 @@ When the user adds the widget to their home screen, Android launches a **configu
 ### Implementation
 ```kotlin
 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(
-    "https://goms-monster.github.io/baseball-companion/mariners-companion/?team=$teamId"
+    "https://baseball-companion.com/?team=$teamId"
 ))
 // In Glance: actionStartActivity(intent)
 ```

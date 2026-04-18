@@ -61,7 +61,7 @@ class ScoreBugWidget : GlanceAppWidget() {
 
 @Composable
 private fun ScoreBugContent(state: GameState, context: Context) {
-    val deepLink = "https://goms-monster.github.io/baseball-companion/mariners-companion/" +
+    val deepLink = "https://baseball-companion.com/" +
         if (state.awayTeamId > 0) "?team=${state.awayTeamId}" else ""
 
     val bgColor = ColorProvider(AndroidColor.parseColor("#111111"))

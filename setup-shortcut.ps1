@@ -1,5 +1,5 @@
 # Run this script once: Right-click → "Run with PowerShell"
-$appDir = "C:\Users\joey_\Documents\mariners-companion\mariners-companion"
+$appDir = "C:\Users\joey_\Documents\baseball-companion"
 $icoPath = "$appDir\icon.ico"
 
 # Download Mariners logo PNG (swap this file later for city connect if desired)
