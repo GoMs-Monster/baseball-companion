@@ -2,11 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0;url=mariners-companion/">
-  <link rel="canonical" href="mariners-companion/">
-  <title>Baseball Companion</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MLB Companion</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <p>Redirecting to <a href="mariners-companion/">Baseball Companion</a>...</p>
+  <header id="scorebar">
+    <div id="teamPicker">
+      <button id="teamBtn"></button>
+      <div id="teamList" class="team-list"></div>
+    </div>
+    <span id="scoreText">Loading...</span>
+    <span id="liveInfo"></span>
+    <div id="bannerActions">
+      <button id="zoneBtn" class="banner-btn" title="Strike Zone">Zone</button>
+      <button id="playsBtn" class="banner-btn" title="Plays">Plays</button>
+      <button id="statsBtn" class="banner-btn" title="Team Stats">Batting</button>
+    </div>
+  </header>
+  <nav>
+    <button data-tab="scorecard">Card</button>
+    <button data-tab="box">Box</button>
+  </nav>
+  <main id="content"></main>
+  <footer id="atbat"></footer>
+  <div id="leagueScores" class="league-scores"></div>
+  <div id="divStandings" class="div-standings"></div>
+  <div id="szModal" class="sz-modal">
+    <div class="sz-modal-content">
+      <span id="szClose" class="sz-modal-close">&times;</span>
+      <div id="szModalBody"></div>
+    </div>
+  </div>
+  <div id="zoneModal" class="sz-modal">
+    <div class="sz-modal-content sz-modal-wide">
+      <span id="zoneClose" class="sz-modal-close">&times;</span>
+      <div id="zoneModalBody"></div>
+    </div>
+  </div>
+  <div id="playsModal" class="sz-modal">
+    <div class="sz-modal-content sz-modal-wide">
+      <span id="playsClose" class="sz-modal-close">&times;</span>
+      <div id="playsModalBody"></div>
+    </div>
+  </div>
+  <div id="teamStatsModal" class="sz-modal">
+    <div class="sz-modal-content">
+      <span id="tsClose" class="sz-modal-close">&times;</span>
+      <div id="tsModalBody"></div>
+    </div>
+  </div>
+  <div id="standingsModal" class="sz-modal">
+    <div class="sz-modal-content sz-modal-wide">
+      <span id="standingsClose" class="sz-modal-close">&times;</span>
+      <div id="standingsModalBody"></div>
+    </div>
+  </div>
+  <div id="playerModal" class="sz-modal">
+    <div class="sz-modal-content">
+      <span id="playerClose" class="sz-modal-close">&times;</span>
+      <div id="playerModalBody"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
