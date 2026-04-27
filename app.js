@@ -11,6 +11,7 @@ const TEAM_COLORS = {
   143:['#002D72','#E81828'],144:['#13274F','#CE1141'],145:['#27251F','#C4CED4'],
   146:['#000000','#00A3E0'],147:['#0C2340','#C4CED4'],158:['#12284B','#FFC52F']
 };
+const isReturningUser = localStorage.getItem('teamId') !== null;
 let TEAM_ID = parseInt(localStorage.getItem('teamId')) || 136;
 
 function applyTeamColors(id) {
@@ -27,11 +28,135 @@ let sortState = { key: 'order', asc: true };
 let pitchSortState = { key: 'appearance', asc: true };
 let latestGameState = null;
 let standingsCache = null;
-let challengeDb = null; // cached challenges.json data
+let challengeDb = null;
+let homeVisible = true;
+let updateInterval = null;
+let homeScoresInterval = null;
+let updateToken = 0;
 
 const LOGO_URL = id => `https://www.mlbstatic.com/team-logos/${id}.svg`;
-const teamBtn = document.getElementById('teamBtn');
-const teamList = document.getElementById('teamList');
+
+// --- Home page & navigation ---
+
+function closeAllModals() {
+  document.querySelectorAll('.sz-modal').forEach(m => m.style.display = 'none');
+}
+
+function startUpdateLoop() {
+  if (updateInterval) clearInterval(updateInterval);
+  updateInterval = setInterval(update, 12000);
+}
+
+function stopUpdateLoop() {
+  if (updateInterval) { clearInterval(updateInterval); updateInterval = null; }
+}
+
+function showHome() {
+  homeVisible = true;
+  closeAllModals();
+  document.body.classList.add('home-visible');
+  stopUpdateLoop();
+  renderHomeScores();
+  if (homeScoresInterval) clearInterval(homeScoresInterval);
+  homeScoresInterval = setInterval(renderHomeScores, 15000);
+}
+
+function hideHome() {
+  const hp = document.getElementById('homePage');
+  hp.classList.add('fade-out');
+  setTimeout(() => {
+    homeVisible = false;
+    document.body.classList.remove('home-visible');
+    hp.classList.remove('fade-out');
+  }, 300);
+  if (homeScoresInterval) { clearInterval(homeScoresInterval); homeScoresInterval = null; }
+  startUpdateLoop();
+}
+
+function selectTeam(id) {
+  TEAM_ID = parseInt(id);
+  localStorage.setItem('teamId', TEAM_ID);
+  applyTeamColors(TEAM_ID);
+  gamePk = null;
+  userPickedTab = false;
+  if (homeVisible) hideHome();
+  update();
+}
+
+function renderHomeTeamGrid() {
+  const grid = document.getElementById('homeTeamGrid');
+  grid.innerHTML = '';
+  Object.entries(TEAMS).sort((a,b) => a[1].localeCompare(b[1])).forEach(([id, abv]) => {
+    const tile = document.createElement('div');
+    tile.className = 'home-team-tile';
+    tile.innerHTML = `<img src="${LOGO_URL(id)}" alt="${abv}"><span>${abv}</span>`;
+    tile.onclick = () => selectTeam(id);
+    grid.appendChild(tile);
+  });
+}
+
+async function renderHomeScores() {
+  try {
+    const d = new Date();
+    const today = [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-');
+    const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=linescore`);
+    const data = await res.json();
+    const games = data.dates?.[0]?.games || [];
+    const el = document.getElementById('homeScoresList');
+    if (games.length === 0) { el.innerHTML = '<span style="color:#666;font-size:14px">No games today</span>'; return; }
+
+    let html = '';
+    games.forEach(g => {
+      const away = g.teams.away, home = g.teams.home;
+      const awayId = away.team.id, homeId = home.team.id;
+      const awayAbv = TEAMS[awayId] || away.team.name;
+      const homeAbv = TEAMS[homeId] || home.team.name;
+      const state = g.status.abstractGameState;
+      let status, awayScore, homeScore;
+      if (state === 'Preview') {
+        const time = g.gameDate ? new Date(g.gameDate).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : '';
+        status = g.status.detailedState === 'Postponed' ? 'PPD' : time;
+        awayScore = ''; homeScore = '';
+      } else if (state === 'Final') {
+        status = 'F'; awayScore = away.score ?? ''; homeScore = home.score ?? '';
+      } else {
+        const ls = g.linescore;
+        status = ls ? `${(ls.inningHalf || '').charAt(0)}${ls.currentInning || ''}` : 'Live';
+        awayScore = away.score ?? ''; homeScore = home.score ?? '';
+      }
+      const isLive = state === 'Live';
+      html += `<div class="ls-game${isLive ? ' ls-live' : ''}" data-away="${awayId}" data-home="${homeId}">
+        <div class="ls-teams">
+          <span class="ls-team"><img src="${LOGO_URL(awayId)}" class="ls-logo" alt="">${awayAbv}</span>
+          <span class="ls-team"><img src="${LOGO_URL(homeId)}" class="ls-logo" alt="">${homeAbv}</span>
+        </div>
+        <div class="ls-scores">
+          <span class="ls-score">${awayScore}</span>
+          <span class="ls-score">${homeScore}</span>
+        </div>
+        <div class="ls-status">${status}</div>
+      </div>`;
+    });
+    el.innerHTML = html;
+    el.querySelectorAll('.ls-game').forEach(card => {
+      card.onclick = e => {
+        const clickedTeam = e.target.closest('.ls-team');
+        let id;
+        if (clickedTeam) {
+          const teams = card.querySelectorAll('.ls-team');
+          id = parseInt(Array.from(teams).indexOf(clickedTeam) === 0 ? card.dataset.away : card.dataset.home);
+        } else {
+          id = parseInt(card.dataset.home);
+        }
+        if (id && TEAMS[id]) selectTeam(id);
+      };
+    });
+  } catch (err) {
+    console.error('Home scores failed:', err);
+  }
+}
+
+document.getElementById('homeBtn').onclick = () => showHome();
 
 // Load season challenge database
 async function loadChallengeDb() {
@@ -111,47 +236,13 @@ function getPlayerChallengeStats(teamId) {
   return Object.values(byPlayer).sort((a, b) => b.used - a.used);
 }
 
-function setTeamBtn(id) {
-  teamBtn.innerHTML = `<img src="${LOGO_URL(id)}" class="team-logo" alt="">${TEAMS[id]}`;
-}
-setTeamBtn(TEAM_ID);
-
-Object.entries(TEAMS).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([id,abv]) => {
-  const item = document.createElement('div');
-  item.className = 'team-item';
-  item.innerHTML = `<img src="${LOGO_URL(id)}" class="team-logo" alt="">${abv}`;
-  item.onclick = () => {
-    TEAM_ID = parseInt(id);
-    localStorage.setItem('teamId', TEAM_ID);
-
-    setTeamBtn(TEAM_ID);
-    applyTeamColors(TEAM_ID);
-    teamList.classList.remove('open');
-    gamePk = null;
-    userPickedTab = false;
-    update();
-  };
-  teamList.appendChild(item);
-});
-
-teamBtn.onclick = () => teamList.classList.toggle('open');
-document.addEventListener('click', e => {
-  if (!e.target.closest('#teamPicker')) teamList.classList.remove('open');
-});
 applyTeamColors(TEAM_ID);
 
 document.getElementById('scoreText').addEventListener('click', e => {
   const link = e.target.closest('.opp-link');
   if (!link) return;
   const id = parseInt(link.dataset.team);
-  if (!id || !TEAMS[id]) return;
-  TEAM_ID = id;
-  localStorage.setItem('teamId', TEAM_ID);
-  setTeamBtn(TEAM_ID);
-  applyTeamColors(TEAM_ID);
-  gamePk = null;
-  userPickedTab = false;
-  update();
+  if (id && TEAMS[id]) selectTeam(id);
 });
 
 document.getElementById('content').addEventListener('click', e => {
@@ -1401,8 +1492,10 @@ function renderPreview(gameData, isHome) {
 }
 
 async function update() {
+  const token = ++updateToken;
   try {
     if (!gamePk) gamePk = await getTodayGamePk();
+    if (token !== updateToken) return;
     if (!gamePk) {
       document.getElementById('scoreText').textContent = 'No game today';
       document.getElementById('content').innerHTML = '';
@@ -1411,6 +1504,7 @@ async function update() {
       return;
     }
     const res = await fetch(`https://statsapi.mlb.com/api/v1.1/game/${gamePk}/feed/live`);
+    if (token !== updateToken) return;
     const { gameData, liveData } = await res.json();
     liveData._gameData = gameData;
     const state = gameData.status.abstractGameState;
@@ -1546,14 +1640,7 @@ async function renderLeagueScores() {
         } else {
           id = parseInt(card.dataset.teamHome);
         }
-        if (!id || !TEAMS[id]) return;
-        TEAM_ID = id;
-        localStorage.setItem('teamId', TEAM_ID);
-        setTeamBtn(TEAM_ID);
-        applyTeamColors(TEAM_ID);
-        gamePk = null;
-        userPickedTab = false;
-        update();
+        if (id && TEAMS[id]) selectTeam(id);
       };
     });
   } catch (err) {
@@ -1561,5 +1648,16 @@ async function renderLeagueScores() {
   }
 }
 
-update();
-setInterval(update, 12000);
+// --- Startup ---
+renderHomeTeamGrid();
+showHome();
+
+if (isReturningUser) {
+  const startTime = Date.now();
+  update().then(() => {
+    if (!homeVisible || !gamePk) return;
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, 2000 - elapsed);
+    setTimeout(() => { if (homeVisible) hideHome(); }, remaining);
+  });
+}

@@ -7,11 +7,23 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header id="scorebar">
-    <div id="teamPicker">
-      <button id="teamBtn"></button>
-      <div id="teamList" class="team-list"></div>
+  <div id="homePage">
+    <div class="home-header">
+      <div class="home-logo">⚾</div>
+      <h1 class="home-title">Baseball Companion</h1>
     </div>
+    <div class="home-teams">
+      <h2 class="home-section-title">Select Your Team</h2>
+      <div id="homeTeamGrid" class="home-team-grid"></div>
+    </div>
+    <div class="home-scores">
+      <h2 class="home-section-title">Today's Scores</h2>
+      <div id="homeScoresList" class="home-scores-list"></div>
+    </div>
+  </div>
+
+  <header id="scorebar">
+    <button id="homeBtn" class="home-btn" title="Home">🏠</button>
     <span id="scoreText">Loading...</span>
     <span id="liveInfo"></span>
     <div id="bannerActions">

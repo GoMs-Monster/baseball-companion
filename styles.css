@@ -1,3 +1,34 @@
+/* Home page */
+#homePage { display:flex; flex-direction:column; min-height:100vh; background:#0a0a0a; overflow-y:auto; }
+body:not(.home-visible) #homePage { display:none !important; }
+body.home-visible #scorebar,
+body.home-visible nav,
+body.home-visible #content,
+body.home-visible #atbat,
+body.home-visible #leagueScores,
+body.home-visible #divStandings { display:none !important; }
+body.home-visible { overflow:auto; }
+#homePage.fade-out { opacity:0; transition:opacity .3s ease; }
+
+.home-header { text-align:center; padding:40px 20px 20px; }
+.home-logo { font-size:64px; line-height:1; }
+.home-title { font-size:28px; font-weight:700; color:#fff; margin:8px 0 0; letter-spacing:1px; }
+
+.home-teams { padding:20px; }
+.home-section-title { font-size:14px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:2px; margin:0 0 16px; text-align:center; }
+.home-team-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:12px; max-width:600px; margin:0 auto; }
+.home-team-tile { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 4px; border-radius:10px; background:#151515; border:1px solid #222; cursor:pointer; transition:all .2s; }
+.home-team-tile:hover { border-color:var(--accent); background:#1a1a1a; transform:scale(1.05); }
+.home-team-tile img { width:36px; height:36px; object-fit:contain; }
+.home-team-tile span { font-size:11px; font-weight:700; color:#ccc; }
+
+.home-scores { padding:10px 20px 30px; }
+.home-scores-list { display:flex; gap:8px; overflow-x:auto; padding:4px 0; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:#333 transparent; }
+.home-scores-list:empty::after { content:'Loading scores...'; color:#666; font-size:14px; display:block; text-align:center; width:100%; }
+
+.home-btn { background:none; border:none; font-size:20px; cursor:pointer; padding:4px 8px; border-radius:4px; transition:background .2s; line-height:1; }
+.home-btn:hover { background:rgba(255,255,255,.1); }
+
 :root { --primary:#0C2C56; --accent:#00A3E0; }
 html, body { margin:0; height:100%; overflow:hidden; }
 body { font-family: system-ui, sans-serif; background:#0a0a0a; color:#eee; display:flex; flex-direction:column; }
@@ -8,13 +39,7 @@ nav { display:flex; background:#111; flex-shrink:0; z-index:9; }
 #atbat:empty { display:none; }
 .league-scores { flex-shrink:0; }
 .div-standings { flex-shrink:0; }
-#teamPicker { position:relative; }
-#teamBtn { background:#000; color:var(--accent); border:1px solid var(--accent); border-radius:4px; padding:4px 10px; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; }
-.team-logo { width:20px; height:20px; object-fit:contain; }
-.team-list { display:none; position:absolute; top:100%; left:0; background:#111; border:1px solid #333; border-radius:6px; max-height:320px; overflow-y:auto; z-index:20; width:140px; margin-top:4px; }
-.team-list.open { display:block; }
-.team-item { display:flex; align-items:center; gap:8px; padding:6px 10px; cursor:pointer; font-size:14px; font-weight:600; }
-.team-item:hover { background:var(--primary); color:var(--accent); }
+
 #scoreText { flex:0; white-space:nowrap; }
 .div-standings { display:flex; align-items:center; justify-content:center; gap:12px; padding:10px 12px; background:#0a0a0a; border-top:1px solid #1a1a1a; }
 .div-standings:empty { display:none; }
@@ -213,8 +238,7 @@ th:hover { background:color-mix(in srgb, var(--primary), #fff 20%); }
 /* Mobile responsive */
 @media (max-width: 600px) {
   #scorebar { flex-wrap:wrap; padding:8px 12px; gap:4px 8px; font-size:16px; }
-  #teamPicker { order:1; }
-  #teamBtn { font-size:14px; padding:3px 8px; }
+  .home-btn { order:1; font-size:18px; }
   #scoreText { order:2; flex:1; font-size:15px; min-width:0; }
   #liveInfo { order:3; width:100%; justify-content:center; flex:unset; font-size:13px; gap:8px; }
   .mc-player { font-size:13px; }
