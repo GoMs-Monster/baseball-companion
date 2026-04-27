@@ -85,7 +85,35 @@ function selectTeam(id) {
 
 function renderHomeTeamGrid() {
   const grid = document.getElementById('homeTeamGrid');
+  const title = grid.previousElementSibling;
   grid.innerHTML = '';
+
+  if (isReturningUser) {
+    title.textContent = 'Your Selected Team';
+    const tile = document.createElement('div');
+    tile.className = 'home-team-tile home-team-selected';
+    tile.innerHTML = `<img src="${LOGO_URL(TEAM_ID)}" alt="${TEAMS[TEAM_ID]}"><span>${TEAMS[TEAM_ID]}</span>`;
+    tile.onclick = () => selectTeam(TEAM_ID);
+    grid.appendChild(tile);
+
+    const changeBtn = document.createElement('button');
+    changeBtn.className = 'home-change-btn';
+    changeBtn.textContent = 'Change Team';
+    changeBtn.onclick = () => {
+      title.textContent = 'Select Your Team';
+      renderAllTeamTiles(grid);
+    };
+    grid.parentElement.appendChild(changeBtn);
+  } else {
+    title.textContent = 'Select Your Team';
+    renderAllTeamTiles(grid);
+  }
+}
+
+function renderAllTeamTiles(grid) {
+  grid.innerHTML = '';
+  const existing = grid.parentElement.querySelector('.home-change-btn');
+  if (existing) existing.remove();
   Object.entries(TEAMS).sort((a,b) => a[1].localeCompare(b[1])).forEach(([id, abv]) => {
     const tile = document.createElement('div');
     tile.className = 'home-team-tile';

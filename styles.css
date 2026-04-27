@@ -14,16 +14,22 @@ body.home-visible { overflow:auto; }
 .home-logo { font-size:64px; line-height:1; }
 .home-title { font-size:28px; font-weight:700; color:#fff; margin:8px 0 0; letter-spacing:1px; }
 
-.home-teams { padding:20px; }
-.home-section-title { font-size:14px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:2px; margin:0 0 16px; text-align:center; }
-.home-team-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:12px; max-width:600px; margin:0 auto; }
-.home-team-tile { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 4px; border-radius:10px; background:#151515; border:1px solid #222; cursor:pointer; transition:all .2s; }
+.home-teams { padding:12px 20px; }
+.home-section-title { font-size:14px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:2px; margin:0 0 12px; text-align:center; }
+.home-team-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(64px, 1fr)); gap:8px; max-width:500px; margin:0 auto; }
+.home-team-tile { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px; border-radius:8px; background:#151515; border:1px solid #222; cursor:pointer; transition:all .2s; }
 .home-team-tile:hover { border-color:var(--accent); background:#1a1a1a; transform:scale(1.05); }
-.home-team-tile img { width:36px; height:36px; object-fit:contain; }
-.home-team-tile span { font-size:11px; font-weight:700; color:#ccc; }
+.home-team-tile img { width:28px; height:28px; object-fit:contain; }
+.home-team-tile span { font-size:10px; font-weight:700; color:#ccc; }
 
-.home-scores { padding:10px 20px 30px; }
-.home-scores-list { display:flex; gap:8px; overflow-x:auto; padding:4px 0; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:#333 transparent; }
+.home-team-selected { border-color:var(--accent); background:#1a1a1a; padding:16px 24px; }
+.home-team-selected img { width:64px; height:64px; }
+.home-team-selected span { font-size:16px; color:var(--accent); }
+.home-change-btn { display:block; margin:12px auto 0; background:none; border:1px solid #444; color:#888; font-size:12px; padding:6px 16px; border-radius:6px; cursor:pointer; transition:all .2s; }
+.home-change-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.home-scores { padding:10px 20px 30px; flex:1; }
+.home-scores-list { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; padding:4px 0; }
 .home-scores-list:empty::after { content:'Loading scores...'; color:#666; font-size:14px; display:block; text-align:center; width:100%; }
 
 .home-btn { background:none; border:none; font-size:20px; cursor:pointer; padding:4px 8px; border-radius:4px; transition:background .2s; line-height:1; }
