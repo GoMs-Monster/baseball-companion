@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-08-26T10:38:38.011Z",
-  "lastGameDate": "2026-08-26",
+  "lastUpdated": "2026-08-27T20:13:33.743Z",
+  "lastGameDate": "2026-08-27",
   "challenges": [
     {
       "gamePk": 823244,
@@ -14963,6 +14963,97 @@
       "team": "COL",
       "playerName": "Edouard Julien",
       "playerId": 666397,
+      "role": "batter"
+    },
+    {
+      "gamePk": 822694,
+      "date": "2026-08-27",
+      "inning": 1,
+      "type": "abs",
+      "reviewType": "MJ",
+      "result": "overturned",
+      "teamId": 120,
+      "team": "WSH",
+      "playerName": "Willi Castro",
+      "playerId": 650489,
+      "role": "batter"
+    },
+    {
+      "gamePk": 822694,
+      "date": "2026-08-27",
+      "inning": 2,
+      "type": "abs",
+      "reviewType": "MJ",
+      "result": "overturned",
+      "teamId": 115,
+      "team": "COL",
+      "playerName": "Ezequiel Tovar",
+      "playerId": 678662,
+      "role": "batter"
+    },
+    {
+      "gamePk": 822694,
+      "date": "2026-08-27",
+      "inning": 4,
+      "type": "manager",
+      "reviewType": "MF",
+      "result": "overturned",
+      "teamId": 115,
+      "team": "COL",
+      "playerName": null,
+      "playerId": null,
+      "role": "manager"
+    },
+    {
+      "gamePk": 822694,
+      "date": "2026-08-27",
+      "inning": 5,
+      "type": "abs",
+      "reviewType": "MJ",
+      "result": "confirmed",
+      "teamId": 120,
+      "team": "WSH",
+      "playerName": "Brady House",
+      "playerId": 691781,
+      "role": "batter"
+    },
+    {
+      "gamePk": 822694,
+      "date": "2026-08-27",
+      "inning": 7,
+      "type": "abs",
+      "reviewType": "MJ",
+      "result": "overturned",
+      "teamId": 120,
+      "team": "WSH",
+      "playerName": "Keibert Ruiz",
+      "playerId": 660688,
+      "role": "catcher"
+    },
+    {
+      "gamePk": 822694,
+      "date": "2026-08-27",
+      "inning": 9,
+      "type": "abs",
+      "reviewType": "MJ",
+      "result": "confirmed",
+      "teamId": 115,
+      "team": "COL",
+      "playerName": "Cole Carrigg",
+      "playerId": 694249,
+      "role": "batter"
+    },
+    {
+      "gamePk": 822694,
+      "date": "2026-08-27",
+      "inning": 9,
+      "type": "abs",
+      "reviewType": "MJ",
+      "result": "confirmed",
+      "teamId": 115,
+      "team": "COL",
+      "playerName": "TJ Rumfield",
+      "playerId": 681198,
       "role": "batter"
     }
   ]
